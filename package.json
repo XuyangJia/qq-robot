@@ -1,0 +1,18 @@
+{
+  "name": "qq-robot",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "nodemon index"
+  },
+  "repository": "git@github.com:XuyangJia/qq-robot.git",
+  "author": "“JiaXuyang” <jiaxuyang@outlook.com>",
+  "license": "MIT",
+  "private": true,
+  "dependencies": {
+    "moment": "^2.29.1",
+    "node-fetch": "^3.0.0",
+    "qs": "^6.10.1",
+    "ws": "^8.2.2"
+  }
+}

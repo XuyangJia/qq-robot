@@ -2,7 +2,7 @@ import fetch from 'node-fetch'
 
 export async function getDog() {
   try {
-    const response = await fetch('https://v1.alapi.cn/api/dog?format=text')
+    const response = await fetch('https://api.oick.cn/dog/api.php')
     const data = await response.text()
     return [
       {

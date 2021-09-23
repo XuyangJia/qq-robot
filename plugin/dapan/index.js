@@ -1,5 +1,5 @@
 import { getDetail } from './service.js'
-const WHITE_LIST = ['HL', '黄历']
+const WHITE_LIST = ['DP', '大盘']
 export async function handler({data, ws, http}) {
   if (!data.message) return
   const message = data.message.toUpperCase().trim()

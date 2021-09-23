@@ -4,7 +4,9 @@ const bot = {
 }
 
 const plugin = {
-  // './plugin/dog': {},
+  './plugin/almanac': {},
+  './plugin/dapan': {},
+  './plugin/dog': {},
   './plugin/recall': {}
 }
 

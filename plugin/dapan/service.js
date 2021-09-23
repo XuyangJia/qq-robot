@@ -5,36 +5,34 @@ import puppeteer from 'puppeteer'
 export async function getDetail() {
   let browser
   try {
-    // browser = await puppeteer.launch({
-    //   headless: process.env.NODE_ENV === 'production',
-    //   args: ['--no-sandbox', '--disable-setuid-sandbox']
-    // })
-    // const page = await browser.newPage()
-    // await page.setViewport({ width: 1000, height: 900 })
-    // await page.goto('http://summary.jrj.com.cn/dpyt/')
-    // await page.addStyleTag({
-    //   content: `
-    //   body > :not(.main),
-    //     .stock_inf,
-    //     .jrj-where,
-    //     .scgl_s1,
-    //     .map_bt,
-    //     .main > .mt,
-    //     iframe {
-    //       display: none !important;
-    //     }
-    //     .main,
-    //     .chart {
-    //       margin: 0 !important;
-    //     }
-    //   `
-    // })
-    // await page.waitForSelector('.chart')
-    // const chart = await page.$('.chart')
-    // const screenshot = resolve(tmpdir(), 'go-cqhttp-node-dapan.png')
-    // await chart.screenshot({ path: screenshot })
-    const screenshot = resolve('D:/Pictures', 'subway_map.jpg')
-    console.log(`file://${screenshot}`)
+    browser = await puppeteer.launch({
+      headless: process.env.NODE_ENV === 'production',
+      args: ['--no-sandbox', '--disable-setuid-sandbox']
+    })
+    const page = await browser.newPage()
+    await page.setViewport({ width: 1000, height: 900 })
+    await page.goto('http://summary.jrj.com.cn/dpyt/')
+    await page.addStyleTag({
+      content: `
+      body > :not(.main),
+        .stock_inf,
+        .jrj-where,
+        .scgl_s1,
+        .map_bt,
+        .main > .mt,
+        iframe {
+          display: none !important;
+        }
+        .main,
+        .chart {
+          margin: 0 !important;
+        }
+      `
+    })
+    await page.waitForSelector('.chart')
+    const chart = await page.$('.chart')
+    const screenshot = resolve(tmpdir(), 'go-cqhttp-node-dapan.png')
+    await chart.screenshot({ path: screenshot })
     return [
       {
         type: 'image',

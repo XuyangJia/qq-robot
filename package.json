@@ -3,7 +3,12 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "nodemon index"
+    "serve": "cd ./go-cqhttp && ./go-cqhttp faststart",
+    "dev": "cross-env NODE_ENV=development nodemon index",
+    "start": "cross-env NODE_ENV=production pm2 start index.js --name qq-robot",
+    "stop": "pm2 stop qq-robot",
+    "reload": "pm2 reload qq-robot",
+    "del": "pm2 delete qq-robot"
   },
   "repository": "git@github.com:XuyangJia/qq-robot.git",
   "author": "“JiaXuyang” <jiaxuyang@outlook.com>",
@@ -17,5 +22,9 @@
     "puppeteer": "^10.4.0",
     "qs": "^6.10.1",
     "ws": "^8.2.2"
+  },
+  "devDependencies": {
+    "cross-env": "^7.0.3",
+    "nodemon": "^2.0.13"
   }
 }

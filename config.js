@@ -5,9 +5,13 @@ const bot = {
 
 const plugin = {
   './plugin/almanac': {},
-  './plugin/dapan': {},
+  // './plugin/dapan': {}, // 不好使 发送图片失败
   './plugin/dog': {},
-  './plugin/recall': {}
+  './plugin/mm': {},
+  './plugin/recall': {},
+  './plugin/weibo': {},
+  './plugin/stock': {},
+  './plugin/tips': {}
 }
 
 export { bot, plugin }

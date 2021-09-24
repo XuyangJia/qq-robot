@@ -2,7 +2,7 @@ import { getRecall } from './service.js'
 
 export async function handler({data, ws, http}) {
   // 非本人撤回 (一般是管理员撤回的), 不复读
-  if (data.operator_id !== data.user_id) {
+  if (data.operator_id === data.user_id) {
     return
   }
   

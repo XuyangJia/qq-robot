@@ -7,6 +7,7 @@ const plugin = {
   './plugin/almanac': {},
   './plugin/dapan': {}, // 不好使 发送图片失败
   './plugin/dog': {},
+  './plugin/fund': {},
   './plugin/mm': {},
   './plugin/recall': {},
   './plugin/weibo': {},

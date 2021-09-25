@@ -15,7 +15,7 @@ export async function handler({data, ws, http}) {
       })
     }
   } else if (data.notice_type === 'friend_recall') {
-    const message = await service.getRecall(http, data.message_id)
+    const message = await getRecall(http, data.message_id)
     if (message) {
       ws.send('send_private_msg', {
         user_id: data.user_id,

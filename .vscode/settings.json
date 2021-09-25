@@ -1,0 +1,13 @@
+{
+  "sqltools.connections": [
+    {
+      "previewLimit": 50,
+      "driver": "SQLite",
+      "name": "test",
+      "database": "${workspaceFolder:qq-robot}/db.sqlite",
+      "group": "aseftae"
+    }
+  ],
+  "sqltools.useNodeRuntime": true,
+  "svn.ignoreMissingSvnWarning": true
+}

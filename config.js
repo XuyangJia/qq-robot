@@ -4,16 +4,16 @@ const bot = {
 }
 
 const plugin = {
-  './plugin/almanac': {},
-  './plugin/dapan': {}, // 不好使 发送图片失败
-  './plugin/dog': {},
-  './plugin/fund': {},
-  './plugin/mm': {},
-  './plugin/recall': {},
-  './plugin/wallpaper': {},
-  './plugin/weibo': {},
-  './plugin/stock': {},
-  './plugin/tips': {}
+  'tips': {},
+  'almanac': {},
+  'dapan': {}, // 不好使 发送图片失败
+  'dog': {},
+  // 'fund': {},
+  'mm': {},
+  'recall': {},
+  'wallpaper': {},
+  'weibo': {},
+  // 'stock': {}
 }
 
 export { bot, plugin }

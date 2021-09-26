@@ -1,5 +1,5 @@
 import { getDetail } from './service.js'
-const WHITE_LIST = ['微博', '热搜', 'WB', 'RS']
+const WHITE_LIST = ['微博', 'WB']
 export async function handler({data, ws, http}) {
   if (!data.message) return
   const [message, search] = data.message.toUpperCase().trim().split(/\s+/)

@@ -1,5 +1,5 @@
 import { getWallPaper } from './service.js'
-const WHITE_LIST = ['壁纸']
+const WHITE_LIST = ['壁纸', '美图']
 export async function handler({data, ws, http}) {
   if (!data.message) return
   const message = data.message.toUpperCase().trim()

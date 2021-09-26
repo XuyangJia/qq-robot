@@ -1,18 +1,12 @@
-import { resolve } from 'path'
 import fetch from 'node-fetch'
-import knex from 'knex'
-import { getCenter } from './util.js'
+import { db } from '../../db/index.js'
 
 const detailCache = new Map()
 const USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.96 Safari/537.36'
-const filename = resolve(process.cwd(), 'db.sqlite')
-const db = knex({
-  client: 'sqlite3',
-  connection: { filename },
-  useNullAsDefault: true,
-})
 
 async function initDatabase() {
+  const has = await db.schema.hasTable('fund')
+  if (has) return
   console.log('开始初始化数据库')
   await db.schema.createTable('fund', table => {
     table.increments('id').primary()
@@ -34,10 +28,9 @@ async function getFundDetail(code) {
       timeout: 5000,
       headers: { 'User-Agent': USER_AGENT }
     })
-    let data = await response.text()
-    data = getCenter(data, 'jsonpgz(', ');')
-    if (!data) return null
-    data = JSON.parse(data)
+    const text = (await response.text()).match(/.+\((.*)\)/)[1]
+    if (!text) return null
+    const data = JSON.parse(text)
     if (new Date() - new Date(data.jzrq) > 1000 * 60 * 60 * 24 * 14) {
       return null
     }
@@ -79,7 +72,6 @@ async function addFund(user_id, code) {
       },
     ]
   }
-  console.log(code)
   await db('fund').insert({
     user_id,
     fund_code: code,
@@ -125,7 +117,7 @@ async function removeFund(user_id, code) {
 async function getFundList(user_id) {
   const list = await Promise.all(
     (await db('fund').column('fund_code').where('user_id', user_id))
-      .map(chives => chives.fund_code)
+      .map(fund => fund.fund_code)
       .map(getFundDetail)
   )
   list.sort((a, b) => b.gszzl - a.gszzl)
@@ -146,9 +138,7 @@ function formatFund(item) {
 }
 
 export async function manageFund(user_id, operator, code) {
-  console.log('---------------------')
-  console.log(user_id, operator, code)
-  // await initDatabase()
+  await initDatabase()
   if (!code) return await getFundList(user_id)
   if (['ADD', '加', '+'].includes(operator.toUpperCase())) {
     return await addFund(user_id, code)

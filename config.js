@@ -10,6 +10,7 @@ const plugin = {
   './plugin/fund': {},
   './plugin/mm': {},
   './plugin/recall': {},
+  './plugin/wallpaper': {},
   './plugin/weibo': {},
   './plugin/stock': {},
   './plugin/tips': {}

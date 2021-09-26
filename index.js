@@ -8,5 +8,9 @@ ws.listen(data => {
   // if (process.env.NODE_ENV === 'development') {
   //   console.log(data)
   // }
+  // const { group_id } = data
+  // if (group_id) {
+  //   console.log(group_id)
+  // }
   plugins.forEach(({ handler }) => handler({ data, ws, http }))
 })

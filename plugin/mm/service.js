@@ -31,7 +31,7 @@ export async function getCos() {
     return [
       {
         type: 'text',
-        data: { text: '妹妹走丢了' }
+        data: { text: '美女走丢了' }
       }
     ]
   }

@@ -1,5 +1,6 @@
-import { manageFund } from './service.js'
-const WHITE_LIST = ['基金', 'JJ']
+// 行业板块
+import { manageBoard } from './service.js'
+const WHITE_LIST = ['板块', 'BK']
 export async function handler({data, ws, http}) {
   if (!data.message) return
   const [key = '', operator = '', code = ''] = data.message.toUpperCase().trim().split(/\s+/)
@@ -14,16 +15,16 @@ export async function handler({data, ws, http}) {
             id: data.message_id,
           },
         },
-        ...(await manageFund(data.user_id, operator, code)),
+        ...(await manageBoard(data.user_id, operator, code)),
       ],
     })
     return
   }
-  
+
   if (data.message_type === 'private') {
     ws.send('send_private_msg', {
       user_id: data.user_id,
-      message: await manageFund(data.user_id, operator, code),
+      message: await manageBoard(data.user_id, operator, code),
     })
     return
   }

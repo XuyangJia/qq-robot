@@ -7,7 +7,7 @@ export async function handler({data, ws, http}) {
   }
   if (data.notice_type === 'group_recall') {
     const { data: { role } } = await http.send('get_group_member_info', { group_id: data.group_id, user_id: data.user_id })
-    if (['owner', 'admin'].includes(role)) return
+    // if (['owner', 'admin'].includes(role)) return
     const message = await getRecall(http, data.message_id)
     if (message) {
       ws.send('send_group_msg', {

@@ -11,7 +11,7 @@ async function initDatabase() {
   await db.schema.createTable('fund', table => {
     table.increments('id').primary()
     table.integer('user_id').index()
-    table.string('fund_code')
+    table.string('code')
     table.dateTime('created_at')
   })
   console.log('[fund]', '初始化数据库完毕')
@@ -57,10 +57,7 @@ async function addFund(user_id, code) {
     ]
   }
   const [{ has }] = await db('fund')
-  .where({
-    user_id,
-    fund_code: code,
-  })
+  .where({ user_id, code })
   .count('id as has')
   if (has) {
     return [
@@ -74,7 +71,7 @@ async function addFund(user_id, code) {
   }
   await db('fund').insert({
     user_id,
-    fund_code: code,
+    code: code,
     created_at: new Date(),
   })
   return [
@@ -91,7 +88,7 @@ async function removeFund(user_id, code) {
   const effectCount = await db('fund')
     .where({
       user_id,
-      fund_code: code,
+      code: code,
     })
     .del()
   if (!effectCount) {
@@ -116,8 +113,8 @@ async function removeFund(user_id, code) {
 
 async function getFundList(user_id) {
   const list = await Promise.all(
-    (await db('fund').column('fund_code').where('user_id', user_id))
-      .map(fund => fund.fund_code)
+    (await db('fund').column('code').where('user_id', user_id))
+      .map(fund => fund.code)
       .map(getFundDetail)
   )
   list.sort((a, b) => b.gszzl - a.gszzl)
@@ -140,11 +137,11 @@ function formatFund(item) {
 export async function manageFund(user_id, operator, code) {
   await initDatabase()
   if (!code) return await getFundList(user_id)
-  if (['ADD', '加', '+'].includes(operator.toUpperCase())) {
+  if (['ADD', '加', '+'].includes(operator)) {
     return await addFund(user_id, code)
   }
 
-  if (['DEL', '删', '-'].includes(operator.toUpperCase())) {
+  if (['DEL', '删', '-'].includes(operator)) {
     return await removeFund(user_id, code)
   }
 }

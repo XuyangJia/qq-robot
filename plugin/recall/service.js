@@ -1,5 +1,6 @@
 import moment from 'moment'
 export async function getRecall(http, message_id) {
+  console.log(message_id)
   try {
     const { data: { message, time, sender: { nickname } } } = await http.send('get_msg', { message_id })
     const timeString = moment(new Date(time * 1000)).format('LTS')

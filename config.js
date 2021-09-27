@@ -6,11 +6,12 @@ const bot = {
 const plugin = {
   'tips': {},
   'almanac': {},
-  'dapan': {}, // 不好使 发送图片失败
+  'board': {},
+  // 'dapan': {}, // 不好使 发送图片失败
   'dog': {},
   // 'fund': {},
   'mm': {},
-  'recall': {},
+  // 'recall': {}, // 获取不到撤回的消息
   'wallpaper': {},
   'weibo': {},
   // 'stock': {}

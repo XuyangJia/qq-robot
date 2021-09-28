@@ -22,7 +22,13 @@ async function getBoardRank(t, pz) {
   const result = diff.map((obj, index) => {
     return [index + 1, obj['f12'], obj['f14'], obj['f3']].join('   ')
   }).join('\n')
-  return result
+  
+  const { name, key } = {
+    1: { name: '地域板块', key: 'region_board' },
+    2: { name: '行业板块', key: 'industry_board' },
+    3: { name: '概念板块', key: 'concept_board' },
+  }[t]
+  return `====  ${name}  ====\n${result}\nhttp://quote.eastmoney.com/center/boardlist.html#${key}`
 }
 
 async function getDetail(code) {
@@ -57,6 +63,23 @@ async function removeBoard(user_id, code) {
   return '删除板块成功'
 }
 
+async function filterBoard(t, range = 1) {
+  const pz = 100
+  const query = stringify(Object.assign({}, params, { pz, fs: `m:90+t:${t}+f:!50`}))
+  const response = await fetch(`${eastmoneyApi}?${query}`)
+  const { data: { diff } } = await response.json()
+  const result = diff.filter(obj => obj['f3'] >= range).map((obj, index) => {
+    return [index + 1, obj['f12'], obj['f14'], obj['f3']].join('   ')
+  }).join('\n')
+  
+  const { name, key } = {
+    1: { name: '地域板块', key: 'region_board' },
+    2: { name: '行业板块', key: 'industry_board' },
+    3: { name: '概念板块', key: 'concept_board' },
+  }[t]
+  return `====  ${name}  ====\n${result}\nhttp://quote.eastmoney.com/center/boardlist.html#${key}`
+}
+
 async function getBoardList(user_id) {
   const list = await Promise.all(
     (await db('board').column('code').where('user_id', user_id)).map(board => board.code)
@@ -89,8 +112,7 @@ export async function manageBoard(user_id, operator, code) {
   if (Number.isInteger(parseInt(operator))) {
     // 列出行业板块和概念板块的前10
     const pz = parseInt(operator)
-    text = `====  行业板块  ====\n${await getBoardRank(2, pz)}\n`
-    + `=====  概念板块  =====\n${await getBoardRank(3, pz)}`
+    text = `${await getBoardRank(2, pz)}\n${await getBoardRank(3, pz)}`
     return [ { type: 'text', data: { text } } ]
   }
   switch (operator) {
@@ -100,9 +122,9 @@ export async function manageBoard(user_id, operator, code) {
     case 'DEL':
       text = await removeBoard(user_id, code)
       break;
-    // case '>':
-    //   text = await addBoard(user_id, code)
-    //   break;
+    case '>':
+      text = `${await filterBoard(2, code)}\n${await filterBoard(3, code)}`
+      break;
     default: // 查询自己添加的板块
       text = await getBoardList(user_id, code)
       break;

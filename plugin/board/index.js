@@ -1,4 +1,3 @@
-// 行业板块
 import { manageBoard } from './service.js'
 const WHITE_LIST = ['板块', 'BK']
 export async function handler({data, ws, http}) {

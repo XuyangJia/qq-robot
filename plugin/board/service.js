@@ -1,5 +1,6 @@
 import fetch from 'node-fetch'
 import { stringify } from 'qs'
+import { table } from 'table'
 import { db } from '../../db/index.js'
 
 const eastmoneyApi = 'https://2.push2.eastmoney.com/api/qt/clist/get'
@@ -14,21 +15,25 @@ const params = {
   fields: 'f1,f2,f3,f4,f5,f6,f7,f8,f9,f10,f12,f13,f14,f15,f16,f17,f18,f20,f21,f23,f24,f25,f26,f22,f33,f11,f62,f128,f136,f115,f152,f124,f107,f104,f105,f140,f141,f207,f208,f209,f222',
 }
 
-async function getBoardRank(t, pz) {
+async function getRank(t, pz, range = -100) {
   const query = stringify(Object.assign({}, params, { pz, fs: `m:90+t:${t}+f:!50`}))
   const response = await fetch(`${eastmoneyApi}?${query}`)
   const { data: { diff } } = await response.json()
-  
-  const result = diff.map((obj, index) => {
-    return [index + 1, obj['f12'], obj['f14'], obj['f3']].join('   ')
-  }).join('\n')
-  
+  const result = diff.filter(obj => obj['f3'] >= range).map((obj, index) => {
+    return [index + 1, obj['f12'], obj['f14'], `${obj['f3']}%`, obj['f128'], obj['f140'], `${obj['f136']}%`]
+  })
+  result.unshift(['排名', '板块代码', '板块名称', '涨跌幅', '领涨股票', '股票代码', '涨跌幅'])
   const { name, key } = {
     1: { name: '地域板块', key: 'region_board' },
     2: { name: '行业板块', key: 'industry_board' },
     3: { name: '概念板块', key: 'concept_board' },
   }[t]
-  return `====  ${name}  ====\n${result}\nhttp://quote.eastmoney.com/center/boardlist.html#${key}`
+  const config = {
+    header: { alignment: 'center', content: `==========    ${name}    ==========` },
+    drawVerticalLine: () => false,
+    drawHorizontalLine: () => false
+  }
+  return table(result, config) + `http://quote.eastmoney.com/center/boardlist.html#${key}`
 }
 
 async function getDetail(code) {
@@ -63,33 +68,26 @@ async function removeBoard(user_id, code) {
   return '删除板块成功'
 }
 
-async function filterBoard(t, range = 1) {
-  const pz = 100
-  const query = stringify(Object.assign({}, params, { pz, fs: `m:90+t:${t}+f:!50`}))
-  const response = await fetch(`${eastmoneyApi}?${query}`)
-  const { data: { diff } } = await response.json()
-  const result = diff.filter(obj => obj['f3'] >= range).map((obj, index) => {
-    return [index + 1, obj['f12'], obj['f14'], obj['f3']].join('   ')
-  }).join('\n')
-  
-  const { name, key } = {
-    1: { name: '地域板块', key: 'region_board' },
-    2: { name: '行业板块', key: 'industry_board' },
-    3: { name: '概念板块', key: 'concept_board' },
-  }[t]
-  return `====  ${name}  ====\n${result}\nhttp://quote.eastmoney.com/center/boardlist.html#${key}`
-}
-
-async function getBoardList(user_id) {
+async function getList(user_id) {
   const list = await Promise.all(
     (await db('board').column('code').where('user_id', user_id)).map(board => board.code)
   )
-  if (!list.length) return '您还不是韭菜, 快来添加股票吧\n 查询：BK 数字\n 添加：BK add 板块代码\n 删除：BK del 板块代码'
+  if (!list.length) return '您还不是韭菜, 快来添加板块吧\n 查询：BK 数字\n 添加：BK add 板块代码\n 删除：BK del 板块代码'
   const dataList = await Promise.all(list.map(getDetail))
-  return '板块名称    板块代码    涨跌幅\n'
-  + dataList.map(obj => {
-    return [obj['f58'], obj['f57'], `  ${obj['f170'] / 100}%`].join('    ')
-  }).join('\n')
+  const data = dataList.map(obj => {
+    return [obj['f57'], obj['f58'], `${obj['f170'] / 100}%`, `quote.eastmoney.com/bk/90.${obj['f57']}.html`]
+  })
+  data.unshift(['板块名称', '板块代码', '涨跌幅', '链接'])
+  const config = {
+    drawVerticalLine: () => false,
+    drawHorizontalLine: () => false
+  }
+  return table(data, config)
+  
+  // return '板块名称    板块代码    涨跌幅\n'
+  // + dataList.map(obj => {
+  //   return [String(obj['f58']).padEnd(4, '...'), obj['f57'], `  ${obj['f170'] / 100}%`].join('    ')
+  // }).join('\n')
 }
 
 async function initDatabase() {
@@ -112,7 +110,7 @@ export async function manageBoard(user_id, operator, code) {
   if (Number.isInteger(parseInt(operator))) {
     // 列出行业板块和概念板块的前10
     const pz = parseInt(operator)
-    text = `${await getBoardRank(2, pz)}\n${await getBoardRank(3, pz)}`
+    text = `${await getRank(2, pz)}\n\n${await getRank(3, pz)}`
     return [ { type: 'text', data: { text } } ]
   }
   switch (operator) {
@@ -123,10 +121,10 @@ export async function manageBoard(user_id, operator, code) {
       text = await removeBoard(user_id, code)
       break;
     case '>':
-      text = `${await filterBoard(2, code)}\n${await filterBoard(3, code)}`
+      text = `${await getRank(2, 100, code)}\n${await getRank(3, 100, code)}`
       break;
     default: // 查询自己添加的板块
-      text = await getBoardList(user_id, code)
+      text = await getList(user_id, code)
       break;
   }
   return [ { type: 'text', data: { text } } ]

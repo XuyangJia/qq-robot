@@ -1,247 +1,92 @@
 import fetch from 'node-fetch'
-import { tmpdir } from 'os'
-import { resolve } from 'path'
-import puppeteer from 'puppeteer'
 import { stringify } from 'qs'
-import { shuiyin } from './shuiyin.js'
+import { db } from '../../db/index.js'
 
-const USER_AGENT =
-  'Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1'
-
-async function search(input) {
-  try {
-    const params = {
-      appid: 'el1902262',
-      token: 'CCSDCZSDCXYMYZYYSYYXSMDDSMDHHDJT',
-      type: 14,
-      pageIndex14: 1,
-      pageSize14: 9,
-      and14: `MultiMatch/Name,Code,PinYin/${input}/true`,
-      returnfields14:
-        'Name,Code,PinYin,MarketType,JYS,MktNum,JYS4App,MktNum4App,ID,Classify,SecurityTypeName,SecurityType,IsExactMatch',
-      isAssociation14: false,
-    }
-    const response = await fetch(`https://searchapi.eastmoney.com/api/Info/Search?${stringify(params)}`,{
-      headers: {
-        'User-Agent': USER_AGENT,
-        Referer: 'https://wap.eastmoney.com/'
-      }
-    })
-    const data = await response.json()
-    if (!data || !Array.isArray(data.Data)) return []
-    return data.Data
-  } catch (e) {
-    console.error('[stock]', e)
-    return []
-  }
+async function queryStock(keyword) {
+  const searchapi = `https://searchapi.eastmoney.com/bussiness/web/QuotationLabelSearch?keyword=${keyword}&type=0&pi=1&ps=30&token=32A8A21716361A5A387B0D85259A0037`
+  const response = await fetch(searchapi)
+  const { Data } = await response.json()
+  if (!Data) return `未找到与 ${keyword} 相关的赌场`
+  // Type 1 AB股 2 指数 3 板块 4 港股 5 美股 8 基金
+  return Data.filter(({ Type }) => [1, 2, 3, 4, 5, 8].includes(Type)).map(({ Name, Datas }) => {
+    return `${Name}\n` + Datas.map(({Code, Name}) => `${Name} [ ${Code} ]`).join('\n')
+  }).join('\n\n')
 }
 
-let mobilequotechart = ''
-
-async function getDetail(key, typeName, title = '') {
-  let browser
-  try {
-    browser = await puppeteer.launch({
-      headless: process.env.NODE_ENV === 'production',
-      args: ['--no-sandbox', '--disable-setuid-sandbox']
-    })
-    const page = await browser.newPage()
-    await page.setRequestInterception(true)
-    page.on('request', async request => {
-      try {
-        if (request.url().includes('mobilequotechart.min.js')) {
-          if (!mobilequotechart) {
-            const response = await fetch(request.url())
-            const data = await response.text()
-            // 去2次
-            mobilequotechart = data
-              .replace(shuiyin.before, shuiyin.after)
-              .replace(shuiyin.before, shuiyin.after)
-          }
-          request.respond({
-            status: 200,
-            contentType: 'application/javascript',
-            body: mobilequotechart
-          })
-          return
-        }
-      } catch (e) {
-        console.error('[stock]', e)
-      }
-      request.continue()
-    })
-    await page.setUserAgent(USER_AGENT)
-    await page.setViewport({
-      width: 414,
-      height: typeName === '基金' ? 600 - 14 : 600 - 90
-    })
-    await page.goto(`https://wap.eastmoney.com/quote/stock/${key}.html`)
-    await page.addStyleTag({
-      content: `
-      #openinapp,
-      [id*=pop],
-      [id*=popup],
-      [class*=pop],
-      [class*=popup],
-      [class*=dc],
-      .icons-index-menu3,
-      .icons-index-back,
-      .wapfooter,
-      .stock-footer,
-      .otc-bottom,
-      .otc-other,
-      .icons-index-menu2,
-      .icon-arrow-bottom,
-      .otc-rate,
-      #otc-chart-prd,
-      #go-pc,
-      .btn-more,
-      #stock-infos-tabs,
-      #stock-infos-list,
-      #ad-header,
-      .otc-right:before {
-        display: none !important;
-      }
-      .comm-nav {
-        top: 0 !important;
-      }
-      
-      .stock-detail {
-        padding-top: 0 !important;
-      }
-      
-      body {
-        padding-top: 43px !important;
-      }
-    `
-    })
-    await page.addScriptTag({
-      content: `
-      document.querySelector('.icons-index-back').parentNode.innerHTML = '${String(
-        title
-      ).replace(/'/g, '')}'
-    `
-    })
-    // 象征性 等1秒
-    try {
-      if (typeName === '基金') {
-        await page.waitForSelector('.otc-evaluation', { timeout: 1000 })
-      }
-    } catch (e) {}
-    const screenshot = resolve(tmpdir(), `go-cqhttp-node-stock-${key}.png`)
-    await page.screenshot({ path: screenshot })
-    return 'file://' + screenshot
-  } catch (e) {
-    console.error('[stock]', e)
-    return e.message || '未知错误'
-  } finally {
-    if (browser && process.env.NODE_ENV === 'production') {
-      await browser.close()
-    }
-  }
+async function getDetail(code) {
+  const response = await fetch(`http://push2.eastmoney.com/api/qt/stock/get?secid=0.${code}&invt=2&fltt=2&fields=f43,f57,f58,f169,f170,f46,f44,f51,f168,f47,f164,f163,f116,f60,f45,f52,f50,f48,f167,f117,f71,f161,f49,f530,f135,f136,f137,f138,f139,f141,f142,f144,f145,f147,f148,f140,f143,f146,f149,f55,f62,f162,f92,f173,f104,f105,f84,f85,f183,f184,f185,f186,f187,f188,f189,f190,f191,f192,f107,f111,f86,f177,f78,f110,f262,f263,f264,f267,f268,f250,f251,f252,f253,f254,f255,f256,f257,f258,f266,f269,f270,f271,f273,f274,f275,f127,f199,f128,f193,f196,f194,f195,f197,f80,f280,f281,f282,f284,f285,f286,f287,f292`)
+  const { data } = await response.json()
+  if (data) return data
 }
 
-export async function getStock(input) {
-  let [text, index] = input.split(/\s+/)
-  if (!text) {
-    return [
-      {
-        type: 'text',
-        data: {
-          text: [
-            '[指令]',
-            '股票/GP 代码/名称/拼音 索引',
-            '',
-            '[示例]',
-            '股票 白酒',
-            'GP 招商中证 7',
-            'GP SXFJ'
-          ].join('\n')
-        }
-      }
-    ]
-  }
-  let output = await search(text)
+async function addBoard(user_id, code) {
+  const { f58: name } = await getDetail(code)
+  const [{ has }] = await db('stock')
+  .where({ user_id, code })
+  .count('id as has')
+  if (has) return '已存在该赌场'
+  await db('stock').insert({
+    user_id,
+    code,
+    name,
+    created_at: new Date(),
+  })
+  return ['赌场添加成功', `${name} ${code}`].join('\n')
+}
 
-  if (!output.length) {
-    return [
-      {
-        type: 'text',
-        data: {
-          text: '未找到该赌场'
-        }
-      }
-    ]
-  }
-
-  if (output.length === 1) {
-    index = 1
-  }
-
-  let detail = ''
-  if (index) {
-    if (!output[index - 1]) {
-      return [
-        {
-          type: 'text',
-          data: {
-            text: '索引不正确'
-          }
-        }
-      ]
-    }
-    const target = output[index - 1]
-    output = [target]
-    detail = await getDetail(
-      `${target.MktNum}.${target.Code}`,
-      target.SecurityTypeName
-    )
-  }
-
-  const foot =
-    output.length === 9
-      ? '\n(为了避免刷屏, 最多查询 9 条, 建议搜索词精确一些)'
-      : ''
-
-  const ret = [
-    {
-      type: 'text',
-      data: {
-        text:
-          output
-            .map(
-              (item, index) =>
-                `${output.length === 1 ? '' : `${index + 1} `}${
-                  item.SecurityTypeName
-                } ${item.Code} ${item.Name}`
-            )
-            .join('\n') + foot
-      }
-    }
-  ]
-
-  if (detail) {
-    ret.push({
-      type: 'text',
-      data: {
-        text: '\n\n'
-      }
+async function removeBoard(user_id, code) {
+  const effectCount = await db('stock')
+    .where({
+      user_id,
+      code: code,
     })
-    if (detail.startsWith('file://')) {
-      ret.push({
-        type: 'image',
-        data: {
-          file: detail
-        }
-      })
-    } else {
-      ret.push({
-        type: 'text',
-        data: {
-          text: detail
-        }
-      })
-    }
+    .del()
+  if (!effectCount) return '删除赌场失败'
+  return '删除赌场成功'
+}
+
+async function getList(user_id) {
+  const list = await Promise.all(
+    (await db('stock').column('code').where('user_id', user_id)).map(stock => stock.code)
+  )
+  if (!list.length) return '您还不是韭菜, 快来添加股票吧\n 添加：GP add 赌场代码\n 删除：GP del 赌场代码'
+  const dataList = await Promise.all(list.map(getDetail))
+  return '赌场名称    赌场代码    涨跌幅\n'
+  + dataList.map(obj => {
+    return [obj['f58'], obj['f57'], `  ${obj['f170']}%`].join('    ')
+  }).join('\n')
+}
+
+async function initDatabase() {
+  const has = await db.schema.hasTable('stock')
+  if (has) return
+  console.log('开始初始化数据库')
+  await db.schema.createTable('stock', table => {
+    table.increments('id').primary()
+    table.integer('user_id').index()
+    table.string('code')
+    table.string('name')
+    table.dateTime('created_at')
+  })
+  console.log('[stock]', '初始化数据库完毕')
+}
+
+export async function manageStock(user_id, operator, code) {
+  await initDatabase()
+  let text
+  console.log(user_id, operator, code)
+  switch (operator) {
+    case 'ADD':
+      text = await addBoard(user_id, code)
+      break;
+    case 'DEL':
+      text = await removeBoard(user_id, code)
+      break;
+    case '>':
+      break;
+    default: // 查询自己添加的赌场
+      text = operator ? await queryStock(operator) : await getList(user_id)
+      break;
   }
-  return ret
+  return [ { type: 'text', data: { text } } ]
 }

@@ -41,7 +41,7 @@ async function getDetail(code) {
   return null
 }
 
-async function getCode(keyword) {
+export async function getCode(keyword) {
   const stocks = await searchStock(keyword)
   // 先查找完全匹配的
   let data = stocks
@@ -77,7 +77,6 @@ async function addStock(user_id, keyword) {
     })
     return ['赌场添加成功', `${name} ${code}`].join('\n')
   } else {
-    console.error('[stock]', e)
     return ['赌场添加失败', `${keyword}`].join('\n')
   }
 }

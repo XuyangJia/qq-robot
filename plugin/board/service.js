@@ -57,7 +57,7 @@ async function addBoard(user_id, code) {
   return ['添加板块成功', `${name} ${code}`].join('\n')
 }
 
-async function removeBoard(user_id, code) {
+async function delBoard(user_id, code) {
   const effectCount = await db('board')
     .where({
       user_id,
@@ -118,7 +118,7 @@ export async function manageBoard(user_id, operator, code) {
       text = await addBoard(user_id, code)
       break;
     case 'DEL':
-      text = await removeBoard(user_id, code)
+      text = await delBoard(user_id, code)
       break;
     case '>':
       text = `${await getRank(2, 100, code)}\n${await getRank(3, 100, code)}`

@@ -14,3 +14,4 @@ params:
       沪股通 b:BK0707
       深股通 b:BK0804
   fields: 
+    f43 当前价格

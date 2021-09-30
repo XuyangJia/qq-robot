@@ -1,5 +1,5 @@
-import { getCos } from './service.js'
-const WHITE_LIST = ['美女', '妹子']
+import { signIn } from './service.js'
+const WHITE_LIST = ['签到', '打卡']
 export async function handler({data, ws, http}) {
   if (!data.message) return
   const message = data.message.toUpperCase().trim()
@@ -14,16 +14,8 @@ export async function handler({data, ws, http}) {
             id: data.message_id,
           },
         },
-        ...(await getCos(data.user_id)),
+        ...(await signIn(data)),
       ],
-    })
-    return
-  }
-
-  if (data.message_type === 'private') {
-    ws.send('send_private_msg', {
-      user_id: data.user_id,
-      message: await getCos(data.user_id),
     })
     return
   }

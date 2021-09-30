@@ -9,12 +9,13 @@ async function getRandom(jsPath) {
   return arr[Math.floor(Math.random() * arr.length)]
 }
 
-export async function getCos() {
+export async function getCos(user_id) {
+  let result
   try {
     const cos_index = await getRandom(`${publicPath}cos_index.js`)
     const item = await getRandom(`${publicPath}${cos_index}.js`)
     const file = publicPath + item.path
-    return [
+    result = [
       {
         type: 'text',
         data: { text: `\n${item.category} - ${item.suite}` }
@@ -28,11 +29,19 @@ export async function getCos() {
     ]
   } catch (e) {
     console.error('[mm]', e)
-    return [
+    result = [
       {
         type: 'text',
         data: { text: '美女走丢了' }
       }
     ]
   }
+  result.push({
+    "type": "at",
+    "data": {
+        "qq": user_id,
+        "name": "我去，人没了"
+    }
+  })
+  return result
 }

@@ -12,6 +12,8 @@ const plugin = {
   // 'fund': {},
   'mm': {},
   // 'recall': {}, // 获取不到撤回的消息
+  'sign': {},
+  'setu': {},
   'stock': {},
   'wallpaper': {},
   'weibo': {}

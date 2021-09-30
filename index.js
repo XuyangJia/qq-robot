@@ -9,8 +9,12 @@ ws.listen(data => {
   //   console.log(data)
   // }
   // const { group_id } = data
-  // if (group_id) {
-  //   console.log(group_id)
-  // }
   plugins.forEach(({ handler }) => handler({ data, ws, http }))
 })
+
+function _update() { // 定时器
+  plugins.forEach(({ tick }) => tick && tick(http))
+  setTimeout(_update, 1000)
+}
+_update()
+

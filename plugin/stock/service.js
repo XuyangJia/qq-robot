@@ -8,28 +8,31 @@ async function searchStock(keyword) {
   const { Data } = await response.json()
   if (!Data) return []
   // Type 1 AB股 2 指数 3 板块 4 港股 5 美股 8 基金
-  return Data.filter(({ Type }) => [1, 2, 3, 4, 5, 8].includes(Type))
+  return Data.filter(({ Type }) => Type === 1)
 }
 
 async function queryStock(keyword) {
   const Data = await searchStock(keyword)
   if (!Data.length) return `未找到与 ${keyword} 相关的赌场`
   let text = ''
-  for (let i = 0; i < Data.length; i++) {
-    const { Name, Datas } = Data[i]
-    text += `${Name}\n`
+  const [ { Datas } ] = Data
+  if (Datas.length === 1) {
+    const [{ Code, Name }] = Datas
+    const obj = await getDetail(Code)
+    // console.log(obj)
+    text += [Name, Code, `  ${obj['f170']}%`].join('    ')
+  } else {
+    text += '赌场名称    赌场代码    涨跌幅\n'
     for (let j = 0; j < Datas.length; j++) {
       const { Code, Name } = Datas[j]
       const obj = await getDetail(Code)
-      console.log(obj)
-      const range = obj ? `${obj['f170']}%` : ''
-      text += `${Name} [ ${Code} ]  ${range}\n`
+      text += [Name, Code, `  ${obj['f170']}%`].join('    ')
     }
   }
   return text
 }
 
-async function getDetail(code) {
+export async function getDetail(code) {
   // 0: 深证A股  1: 上证A股  116: 港股  153: 美股
   const secids = [`0.${code}`, `1.${code}`, `116.${code}`, `153.${code}`]
   for (let j = 0; j < secids.length; j++) {
@@ -99,11 +102,11 @@ async function getList(user_id) {
   const list = await Promise.all(
     (await db('stock').column('code').where('user_id', user_id)).map(stock => stock.code)
   )
-  if (!list.length) return '您还不是韭菜, 快来添加股票吧\n 添加：GP add 赌场代码\n 删除：GP del 赌场代码'
+  if (!list.length) return '您还不是韭菜, 快来添加股票吧\n 添加: GP add 名称/代码\n 删除: GP del 名称/代码'
   const dataList = await Promise.all(list.map(getDetail))
-  return '赌场名称    赌场代码    涨跌幅\n'
-  + dataList.map(obj => {
-    return [obj['f58'], obj['f57'], `  ${obj['f170']}%`].join('    ')
+  return '赌场代码    赌场名称    涨跌幅\n'
+  + dataList.map(({ f57, f58, f170 }) => {
+    return [f57, f58, `  ${f170}%`].join('    ')
   }).join('\n')
 }
 
@@ -123,19 +126,14 @@ async function initDatabase() {
 
 export async function manageStock(user_id, operator, code) {
   await initDatabase()
-  let text
   switch (operator) {
     case 'ADD':
-      text = await addStock(user_id, code)
-      break;
+      return await addStock(user_id, code)
     case 'DEL':
-      text = await delStock(user_id, code)
-      break;
+      return await delStock(user_id, code)
     case '>':
-      break;
+      return '功能暂未实现'
     default: // 查询自己添加的赌场
-      text = operator ? await queryStock(operator) : await getList(user_id)
-      break;
+      return operator ? await queryStock(operator) : await getList(user_id)
   }
-  return [ { type: 'text', data: { text } } ]
 }

@@ -86,7 +86,6 @@ export async function signIn(data) {
   if (has) {
     // 检测上次签到时间
     const [{ sign_at, coin = 0, times = 0 }] = await db('bank').column('sign_at', 'coin', 'times').where({ user_id })
-    console.log(coin, times)
     if (isSameDay(sign_at, now)) {
       return failed(user_id)
     } else {

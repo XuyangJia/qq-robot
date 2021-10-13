@@ -1,8 +1,10 @@
+import moment from 'moment'
 import { getCode, getDetail } from './service.js'
 import { db } from '../../db/index.js'
 
 async function addWatch(user_id, code, name, prices) {
   console.log(user_id, code, name, prices)
+  const { f43: add_price } = await getDetail(code)
   const [{ has }] = await db('stock_watch')
     .where({ user_id, code })
     .count('id as has')
@@ -11,6 +13,7 @@ async function addWatch(user_id, code, name, prices) {
       user_id,
       code,
       name,
+      add_price,
       prices,
       execute_at: new Date(),
     })
@@ -43,12 +46,14 @@ async function getList(user_id) {
   }).join('\n')
 }
 
-async function checkStock(http, { user_id, code, prices, execute_at }) {
+async function checkStock(http, { user_id, code, add_price, prices, execute_at }) {
   if (Date.now() - execute_at > 10 * 60 * 1000) {
-    const { f58, f43 } = await getDetail(code)
-    const reach = prices.split(' ').map(parseFloat).some(price => f43 >= price)
+    const { f58:name, f43:current_price } = await getDetail(code)
+    const reach = prices.split(' ').map(parseFloat).some(price => {
+      return (add_price <= price && current_price >= price) || (add_price > price && current_price < price)
+    })
     if (reach) {
-      const message = `${f58} 价格已达到 ${f43}`
+      const message = `${name} 价格已达到 ${current_price}`
       const { status } = await http.send('send_private_msg', { user_id, group_id: 909056743, message })
       if (status === 'ok') {
         await db('stock_watch')
@@ -63,7 +68,11 @@ async function check(http) {
   const date = new Date
   const h = date.getHours()
   const m = date.getMinutes()
-  if ((h === 9 && m >= 30) || (h >=10 && h <= 12) || (h >=13 && h <= 15)) {
+  const dealTime = [['09:30', '11:30'], ['13:00', '15:00']]
+  const valid = dealTime.some(([begin, end]) => {
+    return moment(begin, 'HH:mm').isBefore() && moment(end, 'HH:mm').isAfter()
+  })
+  if (valid) {
     const list = await Promise.all(
       await db('stock_watch').column('user_id', 'code', 'prices', 'execute_at')
     )
@@ -81,6 +90,7 @@ async function initDatabase() {
     table.integer('user_id').index()
     table.string('code')
     table.string('name')
+    table.integer('add_price')
     table.string('prices')
     table.dateTime('execute_at')
   })

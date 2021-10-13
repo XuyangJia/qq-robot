@@ -42,7 +42,7 @@ async function signed(user_id, addCoin, coin, times) {
 async function failed(user_id) {
   const words = [
     '签过了就别签了',
-    '机器猫也是会生气的啊',
+    '机器猫也是会生气的哦',
     '哎呀，你烦不烦啊',
     '重复签到并不会再次得到机器币',
     '连续签到刷屏，会有惩罚的哦。',

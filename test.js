@@ -1,5 +1,5 @@
 import fetch from 'node-fetch'
-
+import moment from 'moment'
 
 async function getDetail(code) {
   // 0:  1:  116: 港股  153: 美股
@@ -22,4 +22,9 @@ async function test() {
   
   console.log(datas.map(a=>a['f107']).join())
 }
-test()
+
+const dealTime = [['09:30', '15:55']]
+const valid = dealTime.some(([begin, end]) => {
+  return moment(begin, 'HH:mm').isBefore() && moment(end, 'HH:mm').isAfter()
+})
+console.log(valid)

@@ -19,14 +19,13 @@ async function queryStock(keyword) {
   if (Datas.length === 1) {
     const [{ Code, Name }] = Datas
     const obj = await getDetail(Code)
-    // console.log(obj)
     text += [Name, Code, `  ${obj['f170']}%`].join('    ')
   } else {
-    text += '赌场名称    赌场代码    涨跌幅\n'
+    text += '赌场名称    赌场代码    最新价    涨跌幅\n'
     for (let j = 0; j < Datas.length; j++) {
       const { Code, Name } = Datas[j]
       const obj = await getDetail(Code)
-      text += [Name, Code, `  ${obj['f170']}%`].join('    ')
+      text += [Name, Code, obj['f43'], `  ${obj['f170']}%`].join('    ')
     }
   }
   return text
@@ -104,9 +103,9 @@ async function getList(user_id) {
   )
   if (!list.length) return '您还不是韭菜, 快来添加股票吧\n 添加: GP add 名称/代码\n 删除: GP del 名称/代码'
   const dataList = await Promise.all(list.map(getDetail))
-  return '赌场代码    赌场名称    涨跌幅\n'
-  + dataList.map(({ f57, f58, f170 }) => {
-    return [f57, f58, `  ${f170}%`].join('    ')
+  return '赌场代码    赌场名称    最新价    涨跌幅\n'
+  + dataList.map(({ f57, f58, f43, f170 }) => {
+    return [f57, f58, f43, `  ${f170}%`].join('    ')
   }).join('\n')
 }
 

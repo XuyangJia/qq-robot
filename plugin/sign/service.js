@@ -29,7 +29,7 @@ async function signed(user_id, addCoin, coin, times) {
       "type": "at",
       "data": {
           "qq": user_id,
-          "name": "我去，人没了"
+          "name": "昵称获取失败"
       }
     },
     {
@@ -52,7 +52,7 @@ async function failed(user_id) {
       "type": "at",
       "data": {
           "qq": user_id,
-          "name": "我去，人没了"
+          "name": "昵称获取失败"
       }
     },
     {

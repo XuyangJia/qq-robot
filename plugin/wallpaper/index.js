@@ -3,10 +3,10 @@ const WHITE_LIST = ['壁纸', '美图']
 export async function handler({data, ws, http}) {
   if (!data.message) return
   const message = data.message.toUpperCase().trim()
-  const [key = '', key2 = ''] = data.message.toUpperCase().trim().split(/\s+/)
+  const [key = '', category = ''] = data.message.toUpperCase().trim().split(/\s+/)
   if (!WHITE_LIST.includes(key)) return
-  const options = { '动漫': '010', '人物': '001' }
-  const categories = options[key2] || '100' 
+  const options = { '人物': 'meizi', '动漫': 'dongman', '风景': 'fengjing', 'COS': 'cos' }
+  const fl = options[category] || 'suiji' 
   if (data.message_type === 'group') {
     ws.send('send_group_msg', {
       group_id: data.group_id,
@@ -17,7 +17,7 @@ export async function handler({data, ws, http}) {
             id: data.message_id,
           },
         },
-        ...(await getWallPaper(categories)),
+        ...(await getWallPaper(data.user_id, fl)),
       ],
     })
     return
@@ -26,7 +26,7 @@ export async function handler({data, ws, http}) {
   if (data.message_type === 'private') {
     ws.send('send_private_msg', {
       user_id: data.user_id,
-      message: await getWallPaper(categories),
+      message: await getWallPaper(data.user_id, fl),
     })
     return
   }

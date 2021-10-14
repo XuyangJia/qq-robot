@@ -74,7 +74,7 @@ async function check(http) {
   })
   if (valid) {
     const list = await Promise.all(
-      await db('stock_watch').column('user_id', 'code', 'prices', 'execute_at')
+      await db('stock_watch').column('user_id', 'code', 'add_price', 'prices', 'execute_at')
     )
     list.forEach(obj => checkStock(http, obj))
   }

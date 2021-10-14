@@ -2,17 +2,21 @@ import fetch from 'node-fetch'
 
 export async function getWallPaper(user_id, fl) {
   let result
-  try {
-    const api = fl === 'cos' ? 'https://imgapi.cn/cos.php?return=json' : `https://imgapi.cn/api.php?fl=${fl}&gs=json`
-    const response = await fetch(api)
-    const { imgurl: file } = await response.json()
+  const api = fl === 'cos' ? 'https://imgapi.cn/cos.php?return=json' : `https://imgapi.cn/api.php?fl=${fl}&gs=json`
+  const response = await fetch(api)
+  const { imgurl: file } = await response.json()
+  if (file) {
     result = [
+      {
+        type: 'text',
+        data: { text: file }
+      },
       {
         type: 'image',
         data: { file }
       }
     ]
-  } catch (e) {
+  } else {
     console.error('[wallpaper]', e)
     result = [
       {

@@ -12,7 +12,7 @@ export async function getDetail(search) {
     sign      : '用户发送 "签到/打卡", 进行签到，并且机器人回复一张美女图片',
     setu      : '用户发送 "涩图/SETU", 机器人回复一张动漫图片',
     stock     : '用户发送 "股票/GP 名称/ADD/DEL 股票代码", 查看管理股票列表',
-    wallpaper : '用户发送 "壁纸/美图 人物/动漫/风景/cos", 机器人返回一张高清壁纸',
+    wallpaper : '用户发送 "壁纸 妹子/动漫/风景/cos", 机器人返回一张高清壁纸',
     weibo     : '用户发送 "微博/WB", 机器人抓取微博热搜 TOP10 返回',
     
   }

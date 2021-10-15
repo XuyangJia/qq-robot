@@ -9,6 +9,8 @@ const plugin = {
   'board': {},
   // 'dapan': {}, // 不好使 发送图片失败
   'dog': {},
+  'douyin': {},
+  'fanyi': {},
   // 'fund': {},
   'mm': {},
   // 'recall': {}, // 获取不到撤回的消息

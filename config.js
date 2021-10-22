@@ -9,7 +9,7 @@ const plugin = {
   'board': {},
   // 'dapan': {}, // 不好使 发送图片失败
   'dog': {},
-  'douyin': {},
+  // 'douyin': {},
   'fanyi': {},
   // 'fund': {},
   'mm': {},

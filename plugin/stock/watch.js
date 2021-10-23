@@ -64,20 +64,28 @@ async function checkStock(http, { user_id, code, add_price, prices, execute_at }
   }
 }
 
+let executeRecord ={}
+async function isTradingDay() {
+  const date = moment().format('YYYYMMDD')
+  if (executeRecord[date] === undefined) {
+    const response = await fetch(`https://tool.bitefu.net/jiari/?d=${date}`)
+    const data = await response.text()
+    executeRecord[date] = parseInt(data)
+  }
+  return executeRecord[date] === 0
+}
+
 async function check(http) {
-  const date = new Date
-  const h = date.getHours()
-  const m = date.getMinutes()
+  if (!isTradingDay()) return
   const dealTime = [['09:30', '11:30'], ['13:00', '15:00']]
   const valid = dealTime.some(([begin, end]) => {
     return moment(begin, 'HH:mm').isBefore() && moment(end, 'HH:mm').isAfter()
   })
-  if (valid) {
-    const list = await Promise.all(
-      await db('stock_watch').column('user_id', 'code', 'add_price', 'prices', 'execute_at')
-    )
-    list.forEach(obj => checkStock(http, obj))
-  }
+  if (!valid) return
+  const list = await Promise.all(
+    await db('stock_watch').column('user_id', 'code', 'add_price', 'prices', 'execute_at')
+  )
+  list.forEach(obj => checkStock(http, obj))
 }
 
 async function initDatabase() {

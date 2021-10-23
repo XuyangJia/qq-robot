@@ -1,5 +1,4 @@
 import fetch from 'node-fetch'
-import { stringify } from 'qs'
 import { db } from '../../db/index.js'
 
 async function searchStock(keyword) {
@@ -13,7 +12,7 @@ async function searchStock(keyword) {
 
 async function queryStock(keyword) {
   const Data = await searchStock(keyword)
-  if (!Data.length) return `未找到与 ${keyword} 相关的赌场`
+  if (!Data.length) return `未找到与 ${keyword} 相关的股票`
   let text = ''
   const [ { Datas } ] = Data
   if (Datas.length === 1) {
@@ -21,7 +20,7 @@ async function queryStock(keyword) {
     const obj = await getDetail(Code)
     text += [Name, Code, `  ${obj['f170']}%`].join('    ')
   } else {
-    text += '赌场名称    赌场代码    最新价    涨跌幅\n'
+    text += '股票名称    股票代码    最新价    涨跌幅\n'
     for (let j = 0; j < Datas.length; j++) {
       const { Code, Name } = Datas[j]
       const obj = await getDetail(Code)
@@ -70,16 +69,16 @@ async function addStock(user_id, keyword) {
     const [{ has }] = await db('stock')
     .where({ user_id, code })
     .count('id as has')
-    if (has) return '已存在该赌场'
+    if (has) return '已存在该股票'
     await db('stock').insert({
       user_id,
       code,
       name,
       created_at: new Date(),
     })
-    return ['赌场添加成功', `${name} ${code}`].join('\n')
+    return ['股票添加成功', `${name} ${code}`].join('\n')
   } else {
-    return ['赌场添加失败', `${keyword}`].join('\n')
+    return ['股票添加失败', `${keyword}`].join('\n')
   }
 }
 
@@ -92,9 +91,9 @@ async function delStock(user_id, keyword) {
         code: code,
       })
       .del()
-    if (effectCount) return ['赌场删除成功', `${name} ${code}`].join('\n')
+    if (effectCount) return ['股票删除成功', `${name} ${code}`].join('\n')
   }
-  return ['赌场删除失败, 请使用代码删除 eg: gp del 600519', `${keyword}`].join('\n')
+  return ['股票删除失败, 请使用代码删除 eg: gp del 600519', `${keyword}`].join('\n')
 }
 
 async function getList(user_id) {
@@ -103,7 +102,7 @@ async function getList(user_id) {
   )
   if (!list.length) return '您还不是韭菜, 快来添加股票吧\n 添加: GP add 名称/代码\n 删除: GP del 名称/代码'
   const dataList = await Promise.all(list.map(getDetail))
-  return '赌场代码    赌场名称    最新价    涨跌幅\n'
+  return '股票代码    股票名称    最新价    涨跌幅\n'
   + dataList.map(({ f57, f58, f43, f170 }) => {
     return [f57, f58, f43, `  ${f170}%`].join('    ')
   }).join('\n')
@@ -132,7 +131,7 @@ export async function manageStock(user_id, operator, code) {
       return await delStock(user_id, code)
     case '>':
       return '功能暂未实现'
-    default: // 查询自己添加的赌场
+    default: // 查询自己添加的股票
       return operator ? await queryStock(operator) : await getList(user_id)
   }
 }

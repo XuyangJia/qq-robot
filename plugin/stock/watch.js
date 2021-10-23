@@ -1,3 +1,4 @@
+import fetch from 'node-fetch'
 import moment from 'moment'
 import { getCode, getDetail } from './service.js'
 import { db } from '../../db/index.js'
@@ -40,7 +41,7 @@ async function getList(user_id) {
     (await db('stock_watch').column('code', 'name', 'prices').where('user_id', user_id))
   )
   if (!list.length) return '尚未添加任何监控\n 添加: JK 名称/代码 价格\n 删除: JK 名称/代码'
-  return '赌场代码    赌场名称    价格\n'
+  return '股票代码    股票名称    价格\n'
   + list.map(({ code, name, prices }) => {
     return [code, name, prices].join('    ')
   }).join('\n')
@@ -76,7 +77,8 @@ async function isTradingDay() {
 }
 
 async function check(http) {
-  if (!isTradingDay()) return
+  const tradingDay = await isTradingDay()
+  if (!tradingDay) return
   const dealTime = [['09:30', '11:30'], ['13:00', '15:00']]
   const valid = dealTime.some(([begin, end]) => {
     return moment(begin, 'HH:mm').isBefore() && moment(end, 'HH:mm').isAfter()

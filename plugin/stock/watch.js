@@ -9,20 +9,20 @@ async function addWatch(user_id, code, name, prices) {
   const [{ has }] = await db('stock_watch')
     .where({ user_id, code })
     .count('id as has')
-  if (!has) {
-    await db('stock_watch').insert({
-      user_id,
-      code,
-      name,
-      add_price,
-      prices,
-      execute_at: new Date(),
-    })
-  } else {
+  if (has) {
     await db('stock_watch')
     .where({ user_id, code })
-    .update({ prices })
+    .update({ add_price, prices, execute_at: new Date() })
+    return ['监控更新成功', `${code} ${name} ${add_price} ${prices}`].join('\n')
   }
+  await db('stock_watch').insert({
+    user_id,
+    code,
+    name,
+    add_price,
+    prices,
+    execute_at: new Date(),
+  })
   return ['监控添加成功', `${code} ${name} ${prices}`].join('\n')
 }
 
@@ -38,12 +38,12 @@ async function delWatch(user_id, code, name) {
 
 async function getList(user_id) {
   const list = await Promise.all(
-    (await db('stock_watch').column('code', 'name', 'prices').where('user_id', user_id))
+    (await db('stock_watch').column('code', 'name', 'add_price', 'prices').where('user_id', user_id))
   )
   if (!list.length) return '尚未添加任何监控\n 添加: JK 名称/代码 价格\n 删除: JK 名称/代码'
-  return '股票代码    股票名称    价格\n'
-  + list.map(({ code, name, prices }) => {
-    return [code, name, prices].join('    ')
+  return '股票代码    股票名称    基准价格    监控价格\n'
+  + list.map(({ code, name, add_price, prices }) => {
+    return [code, name, add_price, prices].join('     ')
   }).join('\n')
 }
 

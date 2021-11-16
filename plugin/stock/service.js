@@ -13,14 +13,13 @@ async function searchStock(keyword) {
 async function queryStock(keyword) {
   const Data = await searchStock(keyword)
   if (!Data.length) return `未找到与 ${keyword} 相关的股票`
-  let text = ''
+  let text = '股票名称    股票代码    最新价    涨跌幅\n'
   const [ { Datas } ] = Data
   if (Datas.length === 1) {
     const [{ Code, Name }] = Datas
     const obj = await getDetail(Code)
-    text += [Name, Code, `  ${obj['f170']}%`].join('    ')
+    text += [Name, Code, obj['f43'], `  ${obj['f170']}%`].join('    ')
   } else {
-    text += '股票名称    股票代码    最新价    涨跌幅\n'
     for (let j = 0; j < Datas.length; j++) {
       const { Code, Name } = Datas[j]
       const obj = await getDetail(Code)

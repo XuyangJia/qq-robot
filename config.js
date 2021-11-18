@@ -12,6 +12,7 @@ const plugin = {
   // 'douyin': {},
   'fanyi': {},
   // 'fund': {},
+  'holiday': {},
   'mm': {},
   // 'recall': {}, // 获取不到撤回的消息
   'sign': {},

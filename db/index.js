@@ -1,9 +1,12 @@
-import { resolve } from 'path'
 import knex from 'knex'
 
-const filename = resolve(process.cwd(), 'db/db.sqlite')
 export const db = knex({
-  client: 'sqlite3',
-  connection: { filename },
-  useNullAsDefault: true,
+  client: 'mysql',
+  connection: {
+    host : '121.89.223.177',
+    port : 3306,
+    user : 'root',
+    password : '123456',
+    database : 'robot'
+  }
 })

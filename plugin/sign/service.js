@@ -1,23 +1,9 @@
 import fetch from 'node-fetch'
 import { db } from '../../db/index.js'
+const tableName = 'user'
 
-async function initDatabase() {
-  const has = await db.schema.hasTable('bank')
-  if (has) return
-  console.log('开始初始化数据库')
-  await db.schema.createTable('bank', table => {
-    table.increments('id').primary()
-    table.integer('user_id').index()
-    table.string('nickname')
-    table.integer('coin')
-    table.integer('times')
-    table.dateTime('sign_at')
-  })
-  console.log('[bank]', '初始化数据库完毕')
-}
-
-async function signed(user_id, addCoin, coin, times) {
-  const text = `签到成功！，增加${addCoin}机器币。你目前共有${coin}机器币，你已经累计签到${times}天。`
+async function signed(qq, addCoin, coin, sign_times) {
+  const text = `签到成功！，增加${addCoin}机器币。你目前共有${coin}机器币，你已经累计签到${sign_times}天。`
   const response = await fetch('https://imgapi.cn/api.php?fl=meizi&gs=json')
   const { imgurl: file } = await response.json()
   return [
@@ -28,7 +14,7 @@ async function signed(user_id, addCoin, coin, times) {
     {
       "type": "at",
       "data": {
-          "qq": user_id,
+          qq,
           "name": "昵称获取失败"
       }
     },
@@ -39,7 +25,7 @@ async function signed(user_id, addCoin, coin, times) {
   ]
 }
 
-async function failed(user_id) {
+async function failed(qq) {
   const words = [
     '签过了就别签了',
     '机器猫也是会生气的哦',
@@ -51,7 +37,7 @@ async function failed(user_id) {
     {
       "type": "at",
       "data": {
-          "qq": user_id,
+          qq,
           "name": "昵称获取失败"
       }
     },
@@ -64,10 +50,10 @@ async function failed(user_id) {
   ]
 }
 
-function isSameDay(timeStampA, timeStampB) {
-  const dateA = new Date(timeStampA)
-  const dateB = new Date(timeStampB)
-  return dateA.setHours(0, 0, 0, 0) === dateB.setHours(0, 0, 0, 0)
+function isToDay(timeStamp) {
+  const date = new Date(timeStamp)
+  const today = new Date()
+  return date.setHours(0, 0, 0, 0) === today.setHours(0, 0, 0, 0)
 }
 
 function randomCoin() {
@@ -75,33 +61,32 @@ function randomCoin() {
 }
 
 export async function signIn(data) {
-  await initDatabase()
-  const {user_id, sender} = data
+  const { user_id:qq, sender } = data
   const nickname = sender.card || sender.nickname
-  const now = Date.now()
   const addCoin = randomCoin()
-  const [{ has }] = await db('bank')
-  .where({ user_id })
+  const [{ has }] = await db(tableName)
+  .where({ qq })
   .count('id as has')
   if (has) {
     // 检测上次签到时间
-    const [{ sign_at, coin = 0, times = 0 }] = await db('bank').column('sign_at', 'coin', 'times').where({ user_id })
-    if (isSameDay(sign_at, now)) {
-      return failed(user_id)
+    const [{ sign_at, coin = 0, sign_times = 0 }] = await db(tableName).column('sign_at', 'coin', 'sign_times').where({ qq })
+    if (isToDay(sign_at)) {
+      return failed(qq)
     } else {
-      await db('bank')
-      .where({ user_id })
-      .update({ coin: coin + addCoin, times: times + 1 , sign_at: now})
-      return signed(user_id, addCoin, coin + addCoin, times + 1)
+      await db(tableName)
+      .where({ qq })
+      .update({ coin: coin + addCoin, sign_times: sign_times + 1 , sign_at: new Date })
+      return signed(qq, addCoin, coin + addCoin, sign_times + 1)
     }
   } else {
-    await db('bank').insert({
-      user_id,
+    await db(tableName).insert({
+      qq,
+      password: String(qq),
       nickname,
       coin: addCoin,
-      times: 1,
-      sign_at: now,
+      sign_times: 1,
+      sign_at: new Date,
     })
-    return signed(user_id, addCoin, addCoin, 1)
+    return signed(qq, addCoin, addCoin, 1)
   }
 }

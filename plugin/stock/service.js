@@ -23,7 +23,7 @@ async function queryStock(keyword) {
     for (let j = 0; j < Datas.length; j++) {
       const { Code, Name } = Datas[j]
       const obj = await getDetail(Code)
-      text += [Name, Code, obj['f43'], `  ${obj['f170']}%`].join('    ')
+      text += [Name, Code, obj['f43'], `  ${obj['f170']}%\n`].join('    ')
     }
   }
   return text
@@ -99,7 +99,13 @@ async function getList(user_id) {
   const list = await Promise.all(
     (await db('stock').column('code').where('user_id', user_id)).map(stock => stock.code)
   )
-  if (!list.length) return '您还不是韭菜, 快来添加股票吧\n 添加: GP add 名称/代码\n 删除: GP del 名称/代码'
+  if (!list.length) return `
+  您还不是韭菜, 请使用以下命令进行操作:
+  查询: GP/股票 名称/代码
+  添加: GP/股票 add 名称/代码
+  删除: GP/股票 del 名称/代码
+  查询已添加: GP/股票
+  `
   const dataList = await Promise.all(list.map(getDetail))
   return '股票代码    股票名称    最新价    涨跌幅\n'
   + dataList.map(({ f57, f58, f43, f170 }) => {

@@ -40,7 +40,12 @@ async function getList(user_id) {
   const list = await Promise.all(
     (await db('stock_watch').column('code', 'name', 'add_price', 'prices').where('user_id', user_id))
   )
-  if (!list.length) return '尚未添加任何监控\n 添加: JK 名称/代码 价格\n 删除: JK 名称/代码'
+  if (!list.length) return `
+  尚未添加任何监控, 请使用以下命令进行操作:
+  添加: JK/监控 名称/代码 价格(多个价格用空格分隔)
+  删除: JK/监控 名称/代码
+  查询已添加: JK/监控
+  `
   return '股票代码    股票名称    基准价格    监控价格\n'
   + list.map(({ code, name, add_price, prices }) => {
     return [code, name, add_price, prices].join('     ')

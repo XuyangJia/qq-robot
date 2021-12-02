@@ -59,8 +59,8 @@ async function checkStock(http, { user_id, code, add_price, prices, execute_at }
       return (add_price <= price && current_price >= price) || (add_price > price && current_price < price)
     })
     if (reach) {
-      range = range > 0 ? `涨幅:${range}%` : `跌幅:${range}%`
-      const message = `${name} 价格已达到 ${current_price} ${range}`
+      const hintStr = Number(range) > 0 ? '↑' : '↓'
+      const message = `${name} ￥：${current_price}  ${hintStr}：${range}%`
       const { status } = await http.send('send_private_msg', { user_id, group_id: 909056743, message })
       if (status === 'ok') {
         await db('stock_watch')

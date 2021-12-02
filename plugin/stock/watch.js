@@ -54,12 +54,13 @@ async function getList(user_id) {
 
 async function checkStock(http, { user_id, code, add_price, prices, execute_at }) {
   if (Date.now() - execute_at > 10 * 60 * 1000) {
-    const { f58:name, f43:current_price, f170 } = await getDetail(code)
+    const { f58:name, f43:current_price, f170:range } = await getDetail(code)
     const reach = prices.split(' ').map(parseFloat).some(price => {
       return (add_price <= price && current_price >= price) || (add_price > price && current_price < price)
     })
     if (reach) {
-      const message = `${name} 价格已达到 ${current_price} 涨跌幅 ${f170}%`
+      range = range > 0 ? `涨幅:${range}%` : `跌幅:${range}%`
+      const message = `${name} 价格已达到 ${current_price} ${range}`
       const { status } = await http.send('send_private_msg', { user_id, group_id: 909056743, message })
       if (status === 'ok') {
         await db('stock_watch')

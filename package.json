@@ -15,7 +15,6 @@
   "license": "MIT",
   "private": true,
   "dependencies": {
-    "cheerio": "^1.0.0-rc.10",
     "iconv-lite": "^0.6.3",
     "knex": "^0.95.11",
     "moment": "^2.29.1",
@@ -23,7 +22,6 @@
     "node-fetch": "^3.0.0",
     "puppeteer": "^10.4.0",
     "qs": "^6.10.1",
-    "sqlite3": "^5.0.2",
     "table": "^6.7.1",
     "wordcloud": "^1.2.2",
     "ws": "^8.2.2"

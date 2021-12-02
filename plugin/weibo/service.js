@@ -1,5 +1,4 @@
 import fetch from 'node-fetch'
-import { load } from 'cheerio'
 
 const ICON_MAP = {
   boil: '沸',

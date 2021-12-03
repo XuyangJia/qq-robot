@@ -15,6 +15,7 @@
   "license": "MIT",
   "private": true,
   "dependencies": {
+    "cheerio": "^1.0.0-rc.10",
     "iconv-lite": "^0.6.3",
     "knex": "^0.95.11",
     "moment": "^2.29.1",

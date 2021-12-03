@@ -9,7 +9,8 @@ async function addWatch(user_id, code, name, prices) {
   const [{ has }] = await db('stock_watch')
     .where({ user_id, code })
     .count('id as has')
-  if (has) {
+    if (has) {
+    console.log('当前价格 ' + add_price)
     await db('stock_watch')
     .where({ user_id, code })
     .update({ add_price, prices, execute_at: new Date() })
@@ -54,7 +55,9 @@ async function getList(user_id) {
 
 async function checkStock(http, { user_id, code, add_price, prices, execute_at }) {
   if (Date.now() - execute_at > 10 * 60 * 1000) {
-    const { f58:name, f43:current_price, f170:range } = await getDetail(code)
+    const detail = await getDetail(code)
+    if (!detail) return;
+    const { f58:name, f43:current_price, f170:range } = detail
     const reach = prices.split(' ').map(parseFloat).some(price => {
       return (add_price <= price && current_price >= price) || (add_price > price && current_price < price)
     })
@@ -106,7 +109,7 @@ async function initDatabase() {
     table.integer('user_id').index()
     table.string('code')
     table.string('name')
-    table.integer('add_price')
+    table.double('add_price')
     table.string('prices')
     table.dateTime('execute_at')
   })

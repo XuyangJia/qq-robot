@@ -54,7 +54,11 @@ async function getList(user_id) {
 }
 
 async function checkStock(http, { user_id, code, add_price, prices, execute_at }) {
-  if (Date.now() - execute_at > 10 * 60 * 1000) {
+  const lastExecute = new Date(execute_at).getTime()
+  console.log(execute_at)
+  console.log(lastExecute)
+  return;
+  if (Date.now() - lastExecute > 10 * 60 * 1000) {
     const detail = await getDetail(code)
     if (!detail) return;
     const { f58:name, f43:current_price, f170:range } = detail

@@ -1,0 +1,11 @@
+app_port: 3000
+
+mysql_options:
+  dialect: 'mysql'
+  database: 'robot'
+  username: 'root'
+  password: '123456'
+  host: '121.89.223.177'
+  port: 3306
+
+jwt_secret: 'Jxy123456'

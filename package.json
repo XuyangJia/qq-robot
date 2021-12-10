@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "serve": "cd ./go-cqhttp && ./go-cqhttp faststart",
-    "dev": "cross-env NODE_ENV=development nodemon index",
+    "dev": "cross-env NODE_ENV=development nodemon api",
     "start": "cross-env NODE_ENV=production pm2 start index.js --name qq-robot",
     "stop": "pm2 stop qq-robot",
     "reload": "pm2 reload qq-robot",

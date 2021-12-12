@@ -1,8 +1,8 @@
-import pkg from 'sequelize'
-import { sequelize } from '../db/seq.js'
+import Sequelize from 'sequelize'
+import { seq } from '../db/seq.js'
 
-const { DataTypes } = pkg
-const User = sequelize.define('User', {
+const { DataTypes } = Sequelize
+const User = seq.define('User', {
   username: {
     type: DataTypes.CHAR(10),
     allowNull: false,

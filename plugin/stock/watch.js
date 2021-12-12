@@ -1,46 +1,34 @@
 import fetch from 'node-fetch'
 import moment from 'moment'
-import { getCode, getDetail } from './service.js'
-import { db } from '../../db/index.js'
 
-async function addWatch(user_id, code, name, prices) {
-  console.log(user_id, code, name, prices)
-  const { f43: add_price } = await getDetail(code)
-  const [{ has }] = await db('stock_watch')
-    .where({ user_id, code })
-    .count('id as has')
-    if (has) {
-    console.log('当前价格 ' + add_price)
-    await db('stock_watch')
-    .where({ user_id, code })
-    .update({ add_price, prices, execute_at: new Date() })
-    return ['监控更新成功', `${code} ${name} ${add_price} ${prices}`].join('\n')
+const API = 'http://127.0.0.1:3000/stocks/'
+
+async function addWatch(username, code, name, watch_prices) {
+  const response = await fetch(`${API}add`, {
+    method: 'POST',
+    body: JSON.stringify({username, code, watch_prices}),
+    headers: {'Content-Type': 'application/json'}
+  })
+  const data = await response.json()
+  return [data.result, `${code} ${name} ${watch_prices}`].join('\n')
+}
+
+async function delWatch(username, code, name) {
+  const response = await fetch(`${API}del`, {
+    method: 'POST',
+    body: JSON.stringify({username, code}),
+    headers: {'Content-Type': 'application/json'}
+  })
+  const data = await response.json()
+  if (data.result) {
+    return [data.message, `${code} ${name}`].join('\n')
   }
-  await db('stock_watch').insert({
-    user_id,
-    code,
-    name,
-    add_price,
-    prices,
-    execute_at: new Date(),
-  })
-  return ['监控添加成功', `${code} ${name} ${prices}`].join('\n')
+  return '操作失败，请检查要删除的监控是否存在'
 }
 
-async function delWatch(user_id, code, name) {
-  const effectCount = await db('stock_watch')
-  .where({
-    user_id,
-    code: code,
-  })
-  .del()
-  if (effectCount) return ['监控删除成功', `${name} ${code}`].join('\n')
-}
-
-async function getList(user_id) {
-  const list = await Promise.all(
-    (await db('stock_watch').column('code', 'name', 'add_price', 'prices').where('user_id', user_id))
-  )
+async function getList(username) {
+  const response = await fetch(`${API}?pageNum=1&pageSize=9999&username=${username}`)
+  const { result: { list } } = await response.json()
   if (!list.length) return `
   尚未添加任何监控, 请使用以下命令进行操作:
   添加: JK/监控 名称/代码 价格(多个价格用空格分隔)
@@ -48,31 +36,31 @@ async function getList(user_id) {
   查询已添加: JK/监控
   `
   return '股票代码    股票名称    基准价格    监控价格\n'
-  + list.map(({ code, name, add_price, prices }) => {
-    return [code, name, add_price, prices].join('     ')
+  + list.map(({ code, name, price, watch_prices }) => {
+    return [code, name, price, watch_prices].join('     ')
   }).join('\n')
 }
 
-async function checkStock(http, { user_id, code, add_price, prices, execute_at }) {
-  const lastExecute = new Date(execute_at).getTime()
-  console.log(execute_at)
-  console.log(lastExecute)
-  return;
+async function checkStock(http, { id, username, code, add_price, watch_prices, check_at }) {
+  const lastExecute = new Date(check_at).getTime()
   if (Date.now() - lastExecute > 10 * 60 * 1000) {
     const detail = await getDetail(code)
     if (!detail) return;
-    const { f58:name, f43:current_price, f170:range } = detail
-    const reach = prices.split(' ').map(parseFloat).some(price => {
-      return (add_price <= price && current_price >= price) || (add_price > price && current_price < price)
+    const { name, price, change } = detail
+    const reach = watch_prices.split(' ').map(parseFloat).some(price => {
+      return (add_price <= price && price >= price) || (add_price > price && price < price)
     })
     if (reach) {
-      const hintStr = Number(range) > 0 ? '↑' : '↓'
-      const message = `${name} ￥：${current_price}  ${hintStr}：${range}%`
-      const { status } = await http.send('send_private_msg', { user_id, group_id: 909056743, message })
+      const hintStr = Number(change) > 0 ? '↑' : '↓'
+      const message = `${name} ￥：${price}  ${hintStr}：${change}%`
+      const { status } = await http.send('send_private_msg', { username, group_id: 909056743, message })
       if (status === 'ok') {
-        await db('stock_watch')
-        .where({ user_id, code })
-        .update({ execute_at: new Date() })
+        const response = await fetch(`${API}`, {
+          method:'PATCH',
+          body: JSON.stringify({ id, check_at: new Date }),
+          headers: {'Content-Type': 'application/json'}
+        })
+        await response.json()
       }
     }
   }
@@ -97,49 +85,28 @@ async function check(http) {
     return moment(begin, 'HH:mm').isBefore() && moment(end, 'HH:mm').isAfter()
   })
   if (!valid) return
-  const list = await Promise.all(
-    await db('stock_watch').column('user_id', 'code', 'add_price', 'prices', 'execute_at')
-  )
+  const response = await fetch(`${API}?pageNum=1&pageSize=9999`)
+  const { result: { list } } = await response.json()
   list.forEach(obj => checkStock(http, obj))
 }
 
-async function initDatabase() {
-  // await db.schema.dropTableIfExists('stock_watch')
-  const has = await db.schema.hasTable('stock_watch')
-  if (has) return
-  console.log('开始初始化数据库')
-  await db.schema.createTable('stock_watch', table => {
-    table.increments('id').primary()
-    table.integer('user_id').index()
-    table.string('code')
-    table.string('name')
-    table.double('add_price')
-    table.string('prices')
-    table.dateTime('execute_at')
-  })
-  console.log('[stock_watch]', '初始化数据库完毕')
+async function getDetail(keyword) {
+  const response = await fetch(`${API}info/${keyword}`)
+  const { result } = await response.json()
+  return result
 }
 
-async function isWatching(user_id, code) {
-  const [{ has }] = await db('stock_watch')
-  .where({ user_id, code })
-  .count('id as has')
-  return has
-}
-
-export async function manageWatch(user_id, keyword, ...prices) {
-  await initDatabase()
-  if (!keyword) return await getList(user_id)
-  const { code, name } = await getCode(keyword)
-  const watched = await isWatching(user_id, code)
+export async function manageWatch(username, keyword, ...prices) {
+  if (!keyword) return await getList(username)
+  const result = await getDetail(keyword)
+  if (!result) return `未查找到相应股票`
+  const { code, name } = result
   if (prices.length) {
     const invalid = prices.map(parseFloat).some(Number.isNaN)
     if (invalid) return '价格格式无效，请重新输入'
-    return await addWatch(user_id, code, name, prices.join(' '))
-  } else if (watched) {
-    return await delWatch(user_id, code, name)
+    return await addWatch(username, code, name, prices.join(' '))
   }
-  return '操作无效'
+  return await delWatch(username, code, name)
 }
 
 let count = 0

@@ -1,6 +1,6 @@
 import bcrypt from 'bcryptjs'
 import { validator } from './validator.js'
-import { formatError, userDoseNotExist, userExisted, userInfoError } from "../constants/error.type.js"
+import { formatError, invalidPassword, userDoseNotExist, userExisted, userInfoError } from "../constants/error.type.js"
 import userService from '../service/user.js'
 
 export const userValidator = await validator({
@@ -35,7 +35,9 @@ export async function verifyLogin(ctx, next) {
   try {
     const res = await userService.getUserInfo({ username })
     if (!res) return ctx.app.emit('error', userDoseNotExist, ctx)
-    
+    if (!bcrypt.compareSync(password, res.password)) {
+      return ctx.app.emit('error', invalidPassword, ctx)
+    }
   } catch (error) {
     console.log(userInfoError.message, error)
     userInfoError.result = error

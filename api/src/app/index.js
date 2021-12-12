@@ -10,7 +10,6 @@ import { errHandler } from './errHandler.js'
 const app = new Koa()
 
 const uploadDir = resolve('src', 'upload')
-ensureDirSync(uploadDir)
 app.use(koaBody({
   multipart: true,
   formidable: {
@@ -20,7 +19,8 @@ app.use(koaBody({
   // strict: false
   parsedMethods: ['POST', 'PUT', 'PATCH', 'DELETE']
 }))
-app.use(koaStatic(uploadDir))
+// ensureDirSync(uploadDir)
+// app.use(koaStatic(uploadDir))
 app.use(parameter(app))
 app.use(router.routes())
 app.use(router.allowedMethods())

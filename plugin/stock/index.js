@@ -1,5 +1,4 @@
-import { manageStock } from './service.js'
-import { manageWatch } from './watch.js'
+import { manageWatch, queryStock } from './service.js'
 const WHITE_LIST = [['股票', 'GP'], ['监控', 'JK']]
 
 export async function handler({data, ws, http}) {
@@ -7,7 +6,7 @@ export async function handler({data, ws, http}) {
   const [key = '', ...args] = data.message.toUpperCase().trim().split(/\s+/)
   const i = WHITE_LIST.findIndex(arr => arr.includes(key))
   if (i === -1) return
-  const handler = [manageStock, manageWatch][i]
+  const handler = [queryStock, manageWatch][i]
   if (data.message_type === 'group') {
     ws.send('send_group_msg', {
       group_id: data.group_id,
@@ -45,4 +44,4 @@ export async function handler({data, ws, http}) {
   }
 }
 
-export { tick } from './watch.js'
+export { tick } from './service.js'

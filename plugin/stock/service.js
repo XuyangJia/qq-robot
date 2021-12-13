@@ -1,147 +1,133 @@
 import fetch from 'node-fetch'
-import { db } from '../../db/index.js'
+import moment from 'moment'
 
-async function searchStock(keyword) {
-  const searchapi = `https://searchapi.eastmoney.com/bussiness/web/QuotationLabelSearch?keyword=${keyword}&type=0&pi=1&ps=30&token=32A8A21716361A5A387B0D85259A0037`
-  const response = await fetch(searchapi)
-  const { Data } = await response.json()
-  if (!Data) return []
-  // Type 1 AB股 2 指数 3 板块 4 港股 5 美股 8 基金
-  return Data.filter(({ Type }) => Type === 1)
+const API = 'http://127.0.0.1:3000/stocks/'
+
+async function addWatch(username, opts) {
+  const { code, name, price, watch_prices } = opts
+  const response = await fetch(`${API}add`, {
+    method: 'POST',
+    body: JSON.stringify({username, code, watch_prices}),
+    headers: {'Content-Type': 'application/json'}
+  })
+  const data = await response.json()
+  return [data.result, `${code} ${name} ${price} --> ${watch_prices}`].join('\n')
 }
 
-async function queryStock(keyword) {
-  const Data = await searchStock(keyword)
-  if (!Data.length) return `未找到与 ${keyword} 相关的股票`
-  let text = '股票名称    股票代码    最新价    涨跌幅\n'
-  const [ { Datas } ] = Data
-  if (Datas.length === 1) {
-    const [{ Code, Name }] = Datas
-    const obj = await getDetail(Code)
-    text += [Name, Code, obj['f43'], `  ${obj['f170']}%`].join('    ')
-  } else {
-    for (let j = 0; j < Datas.length; j++) {
-      const { Code, Name } = Datas[j]
-      const obj = await getDetail(Code)
-      text += [Name, Code, obj['f43'], `  ${obj['f170']}%\n`].join('    ')
-    }
+async function delWatch(username, opts) {
+  const { code, name } = opts
+  const response = await fetch(`${API}del`, {
+    method: 'POST',
+    body: JSON.stringify({username, code}),
+    headers: {'Content-Type': 'application/json'}
+  })
+  const data = await response.json()
+  if (data.result) {
+    return [data.message, `${code} ${name}`].join('\n')
   }
-  return text
+  return '操作失败，请检查要删除的监控是否存在'
 }
 
-export async function getDetail(code) {
-  // 0: 深证A股  1: 上证A股  116: 港股  153: 美股
-  const secids = [`0.${code}`, `1.${code}`, `116.${code}`, `153.${code}`]
-  for (let j = 0; j < secids.length; j++) {
-    const secid = secids[j];
-    try {
-      const response = await fetch(`http://push2.eastmoney.com/api/qt/stock/get?secid=${secid}&invt=2&fltt=2&fields=f43,f57,f58,f170`)
-      const { data } = await response.json()
-      if (data) return data
-    } catch (e) {
-      console.log(e)
-      return null
-    }
-  }
-  return null
-}
-
-export async function getCode(keyword) {
-  const stocks = await searchStock(keyword)
-  // 先查找完全匹配的
-  let data = stocks
-  .map(({ Datas }) => Datas)
-  .flat()
-  .find(({Code, Name}) => Code === keyword || Name === keyword)
-  
-  // 查找只有一个股票的
-  data = data || stocks
-  .filter(({ Type, Count }) => Type === 1 && Count === 1 )
-  .map(({ Datas }) => Datas)
-  .flat()[0]
-  
-  if (data) {
-    const { Code, Name } = data
-    return { code: Code, name: Name }
-  }
-  return {}
-}
-
-async function addStock(user_id, keyword) {
-  const { code, name } = await getCode(keyword)
-  if (code) {
-    const [{ has }] = await db('stock')
-    .where({ user_id, code })
-    .count('id as has')
-    if (has) return '已存在该股票'
-    await db('stock').insert({
-      user_id,
-      code,
-      name,
-      created_at: new Date(),
-    })
-    return ['股票添加成功', `${name} ${code}`].join('\n')
-  } else {
-    return ['股票添加失败', `${keyword}`].join('\n')
-  }
-}
-
-async function delStock(user_id, keyword) {
-  const { code, name } = await getCode(keyword)
-  if (code) {
-    const effectCount = await db('stock')
-      .where({
-        user_id,
-        code: code,
-      })
-      .del()
-    if (effectCount) return ['股票删除成功', `${name} ${code}`].join('\n')
-  }
-  return ['股票删除失败, 请使用代码删除 eg: gp del 600519', `${keyword}`].join('\n')
-}
-
-async function getList(user_id) {
-  const list = await Promise.all(
-    (await db('stock').column('code').where('user_id', user_id)).map(stock => stock.code)
-  )
+async function getList(username) {
+  const response = await fetch(`${API}?pageNum=1&pageSize=9999&username=${username}`)
+  const { result: { list } } = await response.json()
   if (!list.length) return `
-  您还不是韭菜, 请使用以下命令进行操作:
-  查询: GP/股票 名称/代码
-  添加: GP/股票 add 名称/代码
-  删除: GP/股票 del 名称/代码
-  查询已添加: GP/股票
+  尚未添加任何监控, 请使用以下命令进行操作:
+  添加: JK/监控 名称/代码 价格(多个价格用空格分隔)
+  删除: JK/监控 名称/代码
+  查询已添加: JK/监控
   `
-  const dataList = await Promise.all(list.map(getDetail))
-  return '股票代码    股票名称    最新价    涨跌幅\n'
-  + dataList.map(({ f57, f58, f43, f170 }) => {
-    return [f57, f58, f43, `  ${f170}%`].join('    ')
+  return '股票代码    股票名称    基准价格    监控价格\n'
+  + list.map(({ code, name, price, watch_prices }) => {
+    return [code, name, price, watch_prices].join('     ')
   }).join('\n')
 }
 
-async function initDatabase() {
-  const has = await db.schema.hasTable('stock')
-  if (has) return
-  console.log('开始初始化数据库')
-  await db.schema.createTable('stock', table => {
-    table.increments('id').primary()
-    table.integer('user_id').index()
-    table.string('code')
-    table.string('name')
-    table.dateTime('created_at')
-  })
-  console.log('[stock]', '初始化数据库完毕')
+async function checkStock(http, { id, username, code, price: add_price, watch_prices, check_at }) {
+  const lastExecute = new Date(check_at).getTime()
+  if (Date.now() - lastExecute > 10 * 60 * 1000) {
+    const detail = await getDetail(code)
+    if (!detail) return
+    const { name, price: curr_price, change } = detail
+    const reach = watch_prices.split(' ').map(parseFloat).some(price => {
+      return (price <= add_price && price >= curr_price) || (price > add_price && price < curr_price)
+    })
+    if (reach) {
+      const hintStr = Number(change) > 0 ? '↑' : '↓'
+      const message = '股票代码    股票名称    基准价格    监控价格\n'
+      + [code, name, add_price, watch_prices].join('     ')
+      + `\n\n当前价格：${curr_price}  ${hintStr}：${change}%`
+      const { status } = await http.send('send_private_msg', { user_id: username, group_id: 909056743, message })
+      if (status === 'ok') {
+        const response = await fetch(`${API}`, {
+          method:'PATCH',
+          body: JSON.stringify({ id, check_at: (new Date).toJSON() }),
+          headers: {'Content-Type': 'application/json'}
+        })
+        await response.json()
+      }
+    }
+  }
 }
 
-export async function manageStock(user_id, operator, code) {
-  await initDatabase()
-  switch (operator) {
-    case 'ADD':
-      return await addStock(user_id, code)
-    case 'DEL':
-      return await delStock(user_id, code)
-    case '>':
-      return '功能暂未实现'
-    default: // 查询自己添加的股票
-      return operator ? await queryStock(operator) : await getList(user_id)
+let executeRecord ={}
+async function isTradingDay() {
+  const date = moment().format('YYYYMMDD')
+  if (executeRecord[date] === undefined) {
+    const response = await fetch(`https://tool.bitefu.net/jiari/?d=${date}`)
+    const data = await response.text()
+    executeRecord[date] = parseInt(data)
   }
+  return executeRecord[date] === 0
+}
+
+async function check(http) {
+  const tradingDay = await isTradingDay()
+  if (!tradingDay) return
+  const dealTime = [['09:30', '11:30'], ['13:00', '15:00']]
+  const valid = dealTime.some(([begin, end]) => {
+    return moment(begin, 'HH:mm').isBefore() && moment(end, 'HH:mm').isAfter()
+  })
+  if (!valid) return
+  const response = await fetch(`${API}?pageNum=1&pageSize=9999`)
+  const { result: { list } } = await response.json()
+  list.forEach(obj => checkStock(http, obj))
+}
+
+async function getDetail(keyword) {
+  const response = await fetch(`${API}info/${keyword}`)
+  const { result } = await response.json()
+  return result
+}
+
+export async function queryStock(username, keyword) {
+  const response = await fetch(`${API}${keyword}`)
+  const { result } = await response.json()
+  if (result.length) {
+    return '股票名称    股票代码    最新价    涨跌幅\n' + result.map(({ name, code, price, change}) => {
+      return [name, code, price, `  ${change}%`].join('    ')
+    }).join('\n')
+  } else {
+    return '未找到相关股票'
+  }
+}
+
+export async function manageWatch(username, keyword, ...prices) {
+  if (!keyword) return await getList(username)
+  const result = await getDetail(keyword)
+  if (!result) return `未查找到相应股票`
+  if (prices.length) {
+    const invalid = prices.map(parseFloat).some(Number.isNaN)
+    if (invalid) return '价格格式无效，请重新输入'
+    const watch_prices = prices.join(' ')
+    return await addWatch(username, Object.assign({ watch_prices }, result))
+  }
+  return await delWatch(username, result)
+}
+
+let count = 0
+const delay = 5
+export async function tick(http) {
+  count = (count + 1) % delay
+  if (!count) check(http)
 }

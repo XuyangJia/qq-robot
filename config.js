@@ -9,13 +9,11 @@ const plugin = {
   'board': {},
   // 'dapan': {}, // 不好使 发送图片失败
   'dog': {},
-  // 'douyin': {},
   'fanyi': {},
-  // 'fund': {},
   'holiday': {},
   'mm': {},
   // 'recall': {}, // 获取不到撤回的消息
-  'sign': {},
+  // 'sign': {}, // 暂停使用
   'stock': {},
   'wallpaper': {},
   'weibo': {}

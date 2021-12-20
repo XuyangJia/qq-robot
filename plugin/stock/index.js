@@ -7,41 +7,14 @@ export async function handler({data, ws, http}) {
   const i = WHITE_LIST.findIndex(arr => arr.includes(key))
   if (i === -1) return
   const handler = [queryStock, manageWatch][i]
+  const { message_type, user_id, group_id = 909056743 } = data
+  const text = await handler(user_id, ...args)
+  const message = [ { type: 'text', data: { text } } ]
   if (data.message_type === 'group') {
-    ws.send('send_group_msg', {
-      group_id: data.group_id,
-      message: [
-        {
-          type: 'reply',
-          data: {
-            id: data.message_id,
-          },
-        },
-        {
-          type: 'text',
-          data: {
-            text: await handler(data.user_id, ...args)
-          }
-        }
-      ],
-    })
-    return
+    message.unshift({ type: 'reply', data: { id: data.message_id } })
   }
-
-  if (data.message_type === 'private') {
-    ws.send('send_private_msg', {
-      user_id: data.user_id,
-      message: [
-        {
-          type: 'text',
-          data: {
-            text: await handler(data.user_id, ...args)
-          }
-        }
-      ]
-    })
-    return
-  }
+  const params = { message_type, user_id, group_id, message }
+  ws.send('send_msg', params)
 }
 
 export { tick } from './service.js'

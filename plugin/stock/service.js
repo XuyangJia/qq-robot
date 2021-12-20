@@ -89,9 +89,13 @@ async function check(http) {
     return moment(begin, 'HH:mm').isBefore() && moment(end, 'HH:mm').isAfter()
   })
   if (!valid) return
-  const response = await fetch(`${API}?pageNum=1&pageSize=9999`)
-  const { result: { list } } = await response.json()
-  list.forEach(obj => checkStock(http, obj))
+  try {
+    const response = await fetch(`${API}?pageNum=1&pageSize=9999`)
+    const { result: { list } } = await response.json()
+    list.forEach(obj => checkStock(http, obj))
+  } catch (error) {
+    console.log('获取监控列表错误：', error)
+  }
 }
 
 async function getDetail(keyword) {

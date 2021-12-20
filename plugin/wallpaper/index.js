@@ -1,12 +1,12 @@
 import { getWallPaper } from './service.js'
-const WHITE_LIST = ['壁纸']
+const WHITE_LIST = ['壁纸', '妹子']
 export async function handler({data, ws, http}) {
   if (!data.message) return
   const message = data.message.toUpperCase().trim()
   const [key = '', category = ''] = data.message.toUpperCase().trim().split(/\s+/)
   if (!WHITE_LIST.includes(key)) return
   const options = { '妹子': 'meizi', '动漫': 'dongman', '风景': 'fengjing', 'COS': 'cos' }
-  const fl = options[category] || 'suiji' 
+  const fl = options[category] || 'meizi' 
   if (data.message_type === 'group') {
     ws.send('send_group_msg', {
       group_id: data.group_id,

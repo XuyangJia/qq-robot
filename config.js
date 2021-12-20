@@ -11,7 +11,7 @@ const plugin = {
   'dog': {},
   'fanyi': {},
   'holiday': {},
-  'mm': {},
+  // 'mm': {},
   // 'recall': {}, // 获取不到撤回的消息
   // 'sign': {}, // 暂停使用
   'stock': {},

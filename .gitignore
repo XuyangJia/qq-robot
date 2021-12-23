@@ -107,3 +107,4 @@ go-cqhttp/config.yml
 go-cqhttp/device.json
 go-cqhttp/session.token
 yarn.lock
+api/config.yml

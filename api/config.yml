@@ -4,8 +4,8 @@ mysql_options:
   dialect: 'mysql'
   database: 'robot'
   username: 'root'
-  password: '123456'
+  password: 'Jxy123789'
   host: '121.89.223.177'
   port: 3306
 
-jwt_secret: 'Jxy123456'
+jwt_secret: 'Jxy1237893818316'

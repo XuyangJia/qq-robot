@@ -1,5 +1,4 @@
 import Router from 'koa-router'
-import { stock } from '../middleware/stock.js'
 import stockController from '../controller/stock.js'
 
 const router = new Router({prefix:'/stocks'})
@@ -14,6 +13,6 @@ router.post('/add', stockController.add)
 router.post('/del', stockController.del)
 // 更新监控
 router.patch('/', stockController.update)
-router.get('/', stock, stockController.findAll)
+router.get('/', stockController.findAll)
 
 export { router }

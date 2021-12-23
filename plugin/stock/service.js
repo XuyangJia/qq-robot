@@ -1,7 +1,7 @@
 import fetch from 'node-fetch'
 import moment from 'moment'
 
-const API = 'http://127.0.0.1:3000/stocks/'
+const API = 'http://127.0.0.1:8989/stocks/'
 
 async function addWatch(username, opts) {
   const { code, name, price, watch_prices } = opts

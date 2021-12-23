@@ -1,4 +1,4 @@
-app_port: 3000
+app_port: 8989
 
 mysql_options:
   dialect: 'mysql'

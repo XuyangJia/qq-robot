@@ -31,7 +31,6 @@ async function delWatch(username, opts) {
 async function getList(username) {
   const response = await fetch(`${API}?pageNum=1&pageSize=9999&username=${username}`)
   const { result: { list } } = await response.json()
-  console.log(list);
   if (!list.length) return `
   尚未添加任何监控, 请使用以下命令进行操作:
   添加: JK/监控 名称/代码 价格(多个价格用空格分隔)
@@ -40,6 +39,7 @@ async function getList(username) {
   `
   return '股票代码    股票名称    基准价格    监控价格\n'
   + list.map(({ code, name, price, watch_prices }) => {
+    console.log(code, name, price, watch_prices);
     return [code, name, price, watch_prices].join('     ')
   }).join('\n')
 }

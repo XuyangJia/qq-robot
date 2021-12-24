@@ -39,13 +39,11 @@ class UserService {
   async findStocks (pageNum, pageSize, username) {
     const offset = (pageNum - 1) * pageSize
     const opts = username ? { username } : null
-    console.log(offset,opts);
     const { count, rows } = await Stock.findAndCountAll({ 
       offset, 
       limit: Number(pageSize), 
       where: opts 
     })
-    console.log(count, rows);
     return {
       pageNum,
       pageSize,

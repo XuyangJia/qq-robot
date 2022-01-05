@@ -1,4 +1,4 @@
-import Router from 'koa-router'
+import Router from '@koa/router'
 import stockController from '../controller/stock.js'
 
 const router = new Router({prefix:'/stocks'})
@@ -13,6 +13,8 @@ router.post('/add', stockController.add)
 router.post('/del', stockController.del)
 // 更新监控
 router.patch('/', stockController.update)
+// 获取单只股票的监控数据
 router.get('/', stockController.findAll)
+router.get('/:username/:code', stockController.find)
 
 export { router }

@@ -2,6 +2,13 @@ import fetch from 'node-fetch'
 import moment from 'moment'
 
 const API = 'http://127.0.0.1:8989/stocks/'
+let watchList = null
+getWatchList() // 初始化监控列表
+async function getWatchList() {
+  const response = await fetch(`${API}?pageNum=1&pageSize=9999`)
+  const { result: { list } } = await response.json()
+  watchList = list
+}
 
 async function addWatch(username, opts) {
   const { code, name, price, watch_prices } = opts
@@ -11,6 +18,7 @@ async function addWatch(username, opts) {
     headers: {'Content-Type': 'application/json'}
   })
   const data = await response.json()
+  getWatchList() // 刷新监控列表
   return [data.result, `${code} ${name} ${price} --> ${watch_prices}`].join('\n')
 }
 
@@ -23,23 +31,21 @@ async function delWatch(username, opts) {
   })
   const data = await response.json()
   if (data.result) {
+    getWatchList() // 刷新监控列表
     return [data.message, `${code} ${name}`].join('\n')
   }
   return '操作失败，请检查要删除的监控是否存在'
 }
 
 async function getList(username) {
-  const response = await fetch(`${API}?pageNum=1&pageSize=9999&username=${username}`)
-  const { result: { list } } = await response.json()
-  if (!list.length) return `
+  if (!watchList.length) return `
   尚未添加任何监控, 请使用以下命令进行操作:
   添加: JK/监控 名称/代码 价格(多个价格用空格分隔)
   删除: JK/监控 名称/代码
   查询已添加: JK/监控
   `
   return '股票代码    股票名称    基准价格    监控价格\n'
-  + list.map(({ code, name, price, watch_prices }) => {
-    console.log(code, name, price, watch_prices);
+  + watchList.map(({ code, name, price, watch_prices }) => {
     return [code, name, price, watch_prices].join('     ')
   }).join('\n')
 }
@@ -85,18 +91,12 @@ async function isTradingDay() {
 async function check(http) {
   const tradingDay = await isTradingDay()
   if (!tradingDay) return
-  const dealTime = [['09:30', '11:30'], ['13:00', '15:00']]
+  const dealTime = [['09:25', '11:30'], ['13:00', '15:00']]
   const valid = dealTime.some(([begin, end]) => {
     return moment(begin, 'HH:mm').isBefore() && moment(end, 'HH:mm').isAfter()
   })
   if (!valid) return
-  try {
-    const response = await fetch(`${API}?pageNum=1&pageSize=9999`)
-    const { result: { list } } = await response.json()
-    list.forEach(obj => checkStock(http, obj))
-  } catch (error) {
-    console.log('获取监控列表错误：', error)
-  }
+  watchList.forEach(obj => checkStock(http, obj))
 }
 
 async function getDetail(keyword) {
@@ -104,13 +104,20 @@ async function getDetail(keyword) {
   const { result } = await response.json()
   return result
 }
-
 export async function queryStock(username, keyword) {
   const response = await fetch(`${API}${keyword}`)
   const { result } = await response.json()
   if (result.length) {
-    return '股票名称    股票代码    最新价    涨跌幅\n' + result.map(({ name, code, price, change}) => {
-      return [name, code, price, `  ${change}%`].join('    ')
+    const myList = watchList.filter(obj => obj.username == username)
+    const watched = result.some(obj1 => myList.some(obj2 => obj1.code === obj2.code))
+    const title = `股票名称    股票代码    最新价    涨跌幅${watched ? '    基准价格    监控价格' : ''}\n`
+    return title + result.map(({ name, code, price, change}) => {
+      const messages = [name, code, price, `  ${change}%`]
+      const watchDetail = myList.find(obj => obj.code === code)
+      if (watchDetail) {
+        messages.splice(4, 0, watchDetail.price, watchDetail.watch_prices)
+      }
+      return messages.join('    ')
     }).join('\n')
   } else {
     return '未找到相关股票'

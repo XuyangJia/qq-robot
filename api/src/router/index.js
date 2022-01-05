@@ -1,6 +1,6 @@
 import { readdirSync } from 'fs'
 import { dirname } from 'path'
-import Router from 'koa-router'
+import Router from '@koa/router'
 
 const router = new Router()
 const routerDir = dirname(decodeURI(import.meta.url).replace(/^file:\/\/\//, ''))

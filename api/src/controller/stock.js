@@ -95,6 +95,16 @@ class StockController {
     }
   }
   
+  async find(ctx) {
+    const { username, code } = ctx.request.params
+    const res = await stockService.getStock({ username, code })
+    ctx.body = {
+      code: 0,
+      message: '获取监控数据成功',
+      result: res
+    }
+  }
+  
   async findAll(ctx) {
     // 1.解析pageNum和pageSize
     const { pageNum = 1, pageSize = 10, username = '' } = ctx.request.query

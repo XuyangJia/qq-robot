@@ -36,7 +36,9 @@ export async function getDetail() {
     return [
       {
         type: 'image',
-        data: { file:`file://${screenshot}` }
+        data: {
+          file: 'https://www.sequelize.com.cn/img/brand_logo.png'
+        }
       }
     ]
     

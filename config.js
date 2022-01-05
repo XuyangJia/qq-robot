@@ -7,9 +7,10 @@ const plugin = {
   'tips': {},
   'almanac': {},
   'board': {},
-  // 'dapan': {}, // 不好使 发送图片失败
+  'dapan': {}, // 不好使 发送图片失败
   'dog': {},
   'fanyi': {},
+  'greet': { group: [166697746, 824466292] },
   'holiday': {},
   // 'mm': {},
   // 'recall': {}, // 获取不到撤回的消息

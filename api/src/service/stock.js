@@ -39,7 +39,8 @@ class UserService {
   async findStocks (pageNum, pageSize, username) {
     const offset = (pageNum - 1) * pageSize
     const opts = username ? { username } : null
-    const { count, rows } = await Stock.findAndCountAll({ 
+    const { count, rows } = await Stock.findAndCountAll({
+      attributes: ['id', 'username', 'name', 'code', 'price', 'watch_prices'],
       offset, 
       limit: Number(pageSize), 
       where: opts 

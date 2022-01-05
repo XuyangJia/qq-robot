@@ -2,12 +2,18 @@ import fetch from 'node-fetch'
 import moment from 'moment'
 
 const API = 'http://127.0.0.1:8989/stocks/'
-let watchList = null
+let watchList = []
 getWatchList() // 初始化监控列表
 async function getWatchList() {
-  const response = await fetch(`${API}?pageNum=1&pageSize=9999`)
-  const { result: { list } } = await response.json()
-  watchList = list
+  try {
+    const response = await fetch(`${API}?pageNum=1&pageSize=9999`)
+    const { result: { list } } = await response.json()
+    if (list && list.length) {
+      watchList = list
+    }
+  } catch (error) {
+    console.log('获取监控列表失败', error);
+  }
 }
 
 async function addWatch(username, opts) {

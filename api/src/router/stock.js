@@ -13,8 +13,7 @@ router.post('/add', stockController.add)
 router.post('/del', stockController.del)
 // 更新监控
 router.patch('/', stockController.update)
-// 获取单只股票的监控数据
+// 获取监控列表
 router.get('/', stockController.findAll)
-router.get('/:username/:code', stockController.find)
 
 export { router }

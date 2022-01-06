@@ -40,7 +40,7 @@ class UserService {
     const offset = (pageNum - 1) * pageSize
     const opts = username ? { username } : null
     const { count, rows } = await Stock.findAndCountAll({
-      attributes: ['id', 'username', 'name', 'code', 'price', 'watch_prices'],
+      attributes: ['id', 'username', 'name', 'code', 'price', 'watch_prices', 'check_at'],
       offset, 
       limit: Number(pageSize), 
       where: opts 

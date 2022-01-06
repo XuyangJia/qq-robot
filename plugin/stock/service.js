@@ -50,8 +50,10 @@ async function getList(username) {
   删除: JK/监控 名称/代码
   查询已添加: JK/监控
   `
+  
+  const myList = watchList.filter(obj => obj.username === String(username))
   return '股票代码    股票名称    基准价格    监控价格\n'
-  + watchList.map(({ code, name, price, watch_prices }) => {
+  + myList.map(({ code, name, price, watch_prices }) => {
     return [code, name, price, watch_prices].join('     ')
   }).join('\n')
 }
@@ -67,14 +69,17 @@ async function checkStock(http, { id, username, code, price: add_price, watch_pr
     })
     if (reach) {
       const hintStr = Number(change) > 0 ? '↑' : '↓'
+      const stock = watchList.find(obj => obj.username === String(username) && obj.code === code)
       const message = '股票代码    股票名称    基准价格    监控价格\n'
-      + [code, name, add_price, watch_prices].join('     ')
+      + [code, stock.name, add_price, watch_prices].join('     ')
       + `\n\n当前价格：${curr_price}  ${hintStr}：${change}%`
       const { status } = await http.send('send_private_msg', { user_id: username, group_id: 909056743, message })
       if (status === 'ok') {
+        check_at = (new Date).toJSON()
+        stock.check_at = check_at
         const response = await fetch(`${API}`, {
           method:'PATCH',
-          body: JSON.stringify({ id, check_at: (new Date).toJSON() }),
+          body: JSON.stringify({ id, check_at }),
           headers: {'Content-Type': 'application/json'}
         })
         await response.json()
@@ -114,7 +119,7 @@ export async function queryStock(username, keyword) {
   const response = await fetch(`${API}${keyword}`)
   const { result } = await response.json()
   if (result.length) {
-    const myList = watchList.filter(obj => obj.username == username)
+    const myList = watchList.filter(obj => obj.username === String(username))
     const watched = result.some(obj1 => myList.some(obj2 => obj1.code === obj2.code))
     const title = `股票名称    股票代码    最新价    涨跌幅${watched ? '    基准价格    监控价格' : ''}\n`
     return title + result.map(({ name, code, price, change}) => {

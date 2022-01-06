@@ -51,7 +51,6 @@ class StockController {
   async add(ctx) {
     // 判断要添加的股票是否存在
     const { code, username, watch_prices } = ctx.request.body
-    console.log('adddddddddddd');
     console.log(code, username, watch_prices);
     const data = await getDetail(code)
     if (!data) {

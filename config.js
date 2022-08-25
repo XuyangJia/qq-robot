@@ -6,16 +6,16 @@ const bot = {
 const plugin = {
   'tips': {},
   'almanac': {},
-  'board': {},
-  'dapan': {}, // 不好使 发送图片失败
+  // 'board': {},
+  // 'dapan': {}, // 不好使 发送图片失败
   'dog': {},
   'fanyi': {},
-  'greet': { group: [166697746, 824466292] },
+  // 'greet': { group: [166697746, 824466292] },
   'holiday': {},
-  // 'mm': {},
+  'mm': {},
   // 'recall': {}, // 获取不到撤回的消息
   // 'sign': {}, // 暂停使用
-  'stock': {},
+  // 'stock': {},
   'wallpaper': {},
   'weibo': {}
 }

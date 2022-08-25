@@ -6,7 +6,7 @@ export async function handler({data, ws, http}) {
   const [key = '', category = ''] = data.message.toUpperCase().trim().split(/\s+/)
   if (!WHITE_LIST.includes(key)) return
   const options = { '妹子': 'meizi', '动漫': 'dongman', '风景': 'fengjing', 'COS': 'cos' }
-  const fl = options[category] || 'meizi' 
+  const fl = options[category] || 'meizi'
   if (data.message_type === 'group') {
     ws.send('send_group_msg', {
       group_id: data.group_id,

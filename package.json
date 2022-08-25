@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "api": "cd ./api && cross-env NODE_ENV=development nodemon --watch api/ api",
-    "serve": "cd ./go-cqhttp && ./go-cqhttp faststart",
+    "serve": "cd go-cqhttp && go-cqhttp -faststart",
     "dev": "cross-env NODE_ENV=development nodemon --ignore api/ .",
     "start": "cross-env NODE_ENV=production pm2 start index.js --name qq-robot",
     "stop": "pm2 stop qq-robot",
@@ -17,7 +17,6 @@
   "private": true,
   "dependencies": {
     "cheerio": "^1.0.0-rc.10",
-    "cos-nodejs-sdk-v5": "^2.11.6",
     "iconv-lite": "^0.6.3",
     "knex": "^0.95.11",
     "moment": "^2.29.1",
